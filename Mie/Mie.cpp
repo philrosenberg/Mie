@@ -21,6 +21,16 @@ using MieFlt = double;
 using MieComplex = std::complex<MieFlt>;
 constexpr MieComplex im(MieFlt(0), MieFlt(1));
 
+inline constexpr MieFlt innerProduct(MieComplex v1, MieComplex v2)
+{
+    return v1.real() * v2.real() + v1.imag() * v2.imag();
+}
+
+inline constexpr MieFlt innerProduct(MieFlt v1, MieFlt v2)
+{
+    return v1 * v2;
+}
+
 /*
 template<class X>
 inline constexpr MieFlt legendreDash0(X x)
@@ -288,10 +298,11 @@ int main()
 
     //start the summations
     MieFlt commonFactor(3);
-    MieFlt extinctionEfficiency(commonFactor * (a + b).real());
+    MieFlt extinctionEfficiency(commonFactor * (a.real() + b.real()));
     auto norma = std::norm(a);
     auto normb = std::norm(b);
     MieFlt scatteringEfficiency(commonFactor * (std::norm(a) + std::norm(b)));
+    MieFlt asymmetryParameter = commonFactor / MieFlt(2) * innerProduct(a, b); //note first term is 0 for n=1
 
     for (size_t i = 2; i < N; ++i)
     {
@@ -306,6 +317,8 @@ int main()
         std::swap(xi, xiNext);
 
         //calculate new a and b
+        MieComplex aPrev = a;
+        MieComplex bPrev = b;
         auto aFirstTerm = A[i] / refractiveIndex + MieFlt(i) / x;
         a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
         auto bFirstTerm = A[i] * refractiveIndex + MieFlt(i) / x;
@@ -313,12 +326,15 @@ int main()
 
         commonFactor = (MieFlt(2) * i + MieFlt(1));
 
-        extinctionEfficiency += commonFactor * (a + b).real();
+        extinctionEfficiency += commonFactor * (a.real() + b.real());
         scatteringEfficiency += commonFactor * (std::norm(a) + std::norm(b));
+        asymmetryParameter += (MieFlt(i * i) - MieFlt(1.0)) / MieFlt(i) * (innerProduct(aPrev, a) + innerProduct( bPrev, b))
+            + commonFactor / MieFlt(i) / MieFlt(i + 1) * innerProduct(a, b);
     }
 
     extinctionEfficiency *= MieFlt(2) / (x * x);
     scatteringEfficiency *= MieFlt(2) / (x * x);
+    asymmetryParameter *= MieFlt(4) / scatteringEfficiency / (x * x);
 
     //compare to Scott Prahl code's values
     if (std::abs(extinctionEfficiency - 3.1054257433224577) > 0.00001)
@@ -329,6 +345,11 @@ int main()
     if (std::abs(scatteringEfficiency - 3.1054257433224577) > 0.00001)
     {
         std::cout << "Scattering efficiency failed";
+    }
+
+    if (std::abs(asymmetryParameter - 0.63313677398198109) > 0.00001)
+    {
+        std::cout << "Asymmetry parameter failed";
     }
 }
 
