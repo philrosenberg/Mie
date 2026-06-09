@@ -336,11 +336,11 @@ int main()
         backscatterTemp += sign * commonFactor * (a - b);
     }
 
-    MieComplex invXSquared = MieFlt(1) / (x * x);
-    extinctionEfficiency *= MieFlt(2) / (x * x);
-    scatteringEfficiency *= MieFlt(2) / (x * x);
-    asymmetryParameter *= MieFlt(4) / scatteringEfficiency / (x * x);
-    MieFlt backscatterEfficiency = std::norm(backscatterTemp) / (x * x);
+    MieFlt invXSquared = MieFlt(1) / (x * x);
+    extinctionEfficiency *= MieFlt(2) * invXSquared;
+    scatteringEfficiency *= MieFlt(2) * invXSquared;
+    asymmetryParameter *= MieFlt(4) / scatteringEfficiency * invXSquared;
+    MieFlt backscatterEfficiency = std::norm(backscatterTemp) * invXSquared;
 
     //compare to Scott Prahl code's values
     if (std::abs(extinctionEfficiency - 3.1054257433224577) > 0.00001)
