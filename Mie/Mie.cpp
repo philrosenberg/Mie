@@ -318,12 +318,13 @@ int main()
     extinctionEfficiency *= MieFlt(2) / (x * x);
     scatteringEfficiency *= MieFlt(2) / (x * x);
 
-    if (std::abs(extinctionEfficiency - 3.1054257) > 0.00001)
+    //compare to Scott Prahl code's values
+    if (std::abs(extinctionEfficiency - 3.1054257433224577) > 0.00001)
     {
         std::cout << "Extinction efficiency failed";
     }
 
-    if (std::abs(scatteringEfficiency - 3.1054257) > 0.00001)
+    if (std::abs(scatteringEfficiency - 3.1054257433224577) > 0.00001)
     {
         std::cout << "Scattering efficiency failed";
     }
