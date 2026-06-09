@@ -332,7 +332,7 @@ int main()
         extinctionEfficiency += commonFactor * (a.real() + b.real());
         scatteringEfficiency += commonFactor * (std::norm(a) + std::norm(b));
         asymmetryParameter += (MieFlt(i * i) - MieFlt(1.0)) / MieFlt(i) * (innerProduct(aPrev, a) + innerProduct( bPrev, b))
-            + commonFactor / MieFlt(i) / MieFlt(i + 1) * innerProduct(a, b);
+            + commonFactor / (MieFlt(i) * MieFlt(i + 1)) * innerProduct(a, b);
         backscatterTemp += sign * commonFactor * (a - b);
     }
 
