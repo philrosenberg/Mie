@@ -303,6 +303,8 @@ int main()
     auto normb = std::norm(b);
     MieFlt scatteringEfficiency(commonFactor * (std::norm(a) + std::norm(b)));
     MieFlt asymmetryParameter = commonFactor / MieFlt(2) * innerProduct(a, b); //note first term is 0 for n=1
+    MieComplex backscatterTemp = -commonFactor * (a - b);
+    MieFlt sign(-1);
 
     for (size_t i = 2; i < N; ++i)
     {
@@ -319,6 +321,7 @@ int main()
         //calculate new a and b
         MieComplex aPrev = a;
         MieComplex bPrev = b;
+        sign = sign * MieFlt(-1);
         auto aFirstTerm = A[i] / refractiveIndex + MieFlt(i) / x;
         a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
         auto bFirstTerm = A[i] * refractiveIndex + MieFlt(i) / x;
@@ -330,11 +333,14 @@ int main()
         scatteringEfficiency += commonFactor * (std::norm(a) + std::norm(b));
         asymmetryParameter += (MieFlt(i * i) - MieFlt(1.0)) / MieFlt(i) * (innerProduct(aPrev, a) + innerProduct( bPrev, b))
             + commonFactor / MieFlt(i) / MieFlt(i + 1) * innerProduct(a, b);
+        backscatterTemp += sign * commonFactor * (a - b);
     }
 
+    MieComplex invXSquared = MieFlt(1) / (x * x);
     extinctionEfficiency *= MieFlt(2) / (x * x);
     scatteringEfficiency *= MieFlt(2) / (x * x);
     asymmetryParameter *= MieFlt(4) / scatteringEfficiency / (x * x);
+    MieFlt backscatterEfficiency = std::norm(backscatterTemp) / (x * x);
 
     //compare to Scott Prahl code's values
     if (std::abs(extinctionEfficiency - 3.1054257433224577) > 0.00001)
@@ -348,6 +354,11 @@ int main()
     }
 
     if (std::abs(asymmetryParameter - 0.63313677398198109) > 0.00001)
+    {
+        std::cout << "Asymmetry parameter failed";
+    }
+
+    if (std::abs(backscatterEfficiency - 2.9253412092248068) > 0.00001)
     {
         std::cout << "Asymmetry parameter failed";
     }
