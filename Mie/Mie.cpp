@@ -288,17 +288,17 @@ int main()
 
     //start the summations
     MieFlt commonFactor(3);
-    MieFlt extinctionEfficiency(MieFlt(3)*(a+b).real());
+    MieFlt extinctionEfficiency(commonFactor * (a + b).real());
     auto norma = std::norm(a);
     auto normb = std::norm(b);
-    MieFlt scatteringEfficiency(MieFlt(3)*(std::norm(a)+std::norm(b)));
+    MieFlt scatteringEfficiency(commonFactor * (std::norm(a) + std::norm(b)));
 
     for (size_t i = 2; i < N; ++i)
     {
         //MieFlt n = MieFlt(i + 1);
-        psiNext = (MieFlt(2) * MieFlt(i-1) + MieFlt(1)) * psi / x - psiPrev;
+        psiNext = commonFactor * psi / x - psiPrev;
         //psiNext = xiNext.real();
-        xiNext = (MieFlt(2) * MieFlt(i - 1) + MieFlt(1)) * xi / x - xiPrev;
+        xiNext = commonFactor * xi / x - xiPrev;
         //shuffle the next to current and current to next. This is more efficient if we use swap as it avoids assignments
         std::swap(psiPrev, psi);
         std::swap(psi, psiNext);
@@ -311,8 +311,10 @@ int main()
         auto bFirstTerm = A[i] * refractiveIndex + MieFlt(i) / x;
         b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
 
-        extinctionEfficiency += (MieFlt(2) * i + MieFlt(1)) * (a + b).real();
-        scatteringEfficiency += (MieFlt(2) * i + MieFlt(1)) * (std::norm(a) + std::norm(b));
+        commonFactor = (MieFlt(2) * i + MieFlt(1));
+
+        extinctionEfficiency += commonFactor * (a + b).real();
+        scatteringEfficiency += commonFactor * (std::norm(a) + std::norm(b));
     }
 
     extinctionEfficiency *= MieFlt(2) / (x * x);
