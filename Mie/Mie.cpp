@@ -248,67 +248,64 @@ int main()
     std::vector<MieComplex>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
 
 
-    sci::GridData<MieFlt, 1> eigenPi(mus.size());
-    sci::GridData<MieFlt, 1> eigenTau(mus.size());
-    sci::GridData<MieFlt, 1> s(mus.size());
-    sci::GridData<MieFlt, 1> t(mus.size());
-    MieFlt psi;
-    MieComplex xi;
-    MieComplex a;
-    MieComplex b;
 
 
-    sci::GridData<MieFlt, 1> eigenPiPrev(mus.size());
-    sci::GridData<MieFlt, 1> eigenTauPrev(mus.size());
-    sci::GridData<MieFlt, 1> sPrev(mus.size());
-    sci::GridData<MieFlt, 1> tPrev(mus.size());
-    sci::GridData<MieFlt, 1> eigenPiNext(mus.size());
-    MieFlt psiPrev;
-    MieComplex xiPrev;
-    MieFlt psiNext;
-    MieComplex xiNext;
+    //**************************************************
+    //Declare all the variables needed for the sums
+    //and assign them using the values from the n=1 term
+    //**************************************************
+
+    //These variables are needed for working out the overall scatering parameters
+    MieFlt psiPrev = std::sin(x);
+    MieFlt psi = std::sin(x) / x - std::cos(x);
+    MieFlt psiNext(0); //this isn't used until it is defined in the loop
+    MieComplex xiPrev = psiPrev + im * std::cos(x);
+    MieComplex xi = psi + im * (std::cos(x) / x + std::sin(x));
+    MieComplex xiNext(MieFlt(0)); //this isn't used until it is defined in the loop
+    MieFlt sign(-1);
 
 
+    //These variables are needed for the angular resolved scallering
+    //
+    // eigenPi = 1 for all angles and eigenPiPrev = 0 for all angles
+    // hence
+    //t = s = mus
+    // hence 
+    // eigenTau = mus
+    // eigenPiNext = 3*mus
+    //eigenTauPrev = MieFlt(0.0);
+    sci::GridData<MieFlt, 1>  eigenPiPrev(mus.size(), MieFlt(0.0));
+    sci::GridData<MieFlt, 1>  eigenPi(mus.size(), MieFlt(1.0));
+    sci::GridData<MieFlt, 1>  eigenTau(mus);
+    sci::GridData<MieFlt, 1>  eigenPiNext = MieFlt(3) * mus;
 
 
-
-
-
-    //N will alsways be at least 2, so we can safely directly define the first 2 eigenvalues
-    //from Wiscombe equations 3 and 4
-    eigenPiPrev = MieFlt(0.0);
-    eigenPi = MieFlt(1.0);
-    eigenTauPrev = MieFlt(0.0);
-    s = mus * eigenPi;
-    t = s - eigenPiPrev;
-    eigenTau = t - eigenPiPrev;
-    eigenPiNext = s + MieFlt(2) * t;
-    psiPrev = std::sin(x);
-    psi = std::sin(x) / x - std::cos(x);
-    xiPrev = psiPrev + im * std::cos(x);
-    xi = psi + im * (std::cos(x) / x + std::sin(x));
-
+    //a and b are used for both angular resolved and overall scattering properties
+    // A will alsways have a size of at least 2, so this is safe
     //calculate the first a and b terms from the values above
     //Note that the summing over a and b starts with index 1
     //and the prev suffixed variables above have index 0
     COMPLEX aFirstTerm = A[1] / refractiveIndex + MieFlt(1) / x;
-    a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
+    MieComplex a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
     COMPLEX bFirstTerm = A[1] * refractiveIndex + MieFlt(1) / x;
-    b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
+    MieComplex b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
 
-    //start the summations
+
+    //These are the values we will be summing
     MieFlt commonFactor(3);
     MieFlt extinctionEfficiency(commonFactor * (a.real() + b.real()));
-    auto norma = std::norm(a);
-    auto normb = std::norm(b);
     MieFlt scatteringEfficiency(commonFactor * (std::norm(a) + std::norm(b)));
     MieFlt asymmetryParameter = commonFactor / MieFlt(2) * innerProduct(a, b); //note first term is 0 for n=1
     MieComplex backscatterTemp = -commonFactor * (a - b);
-    MieFlt sign(-1);
 
     sci::GridData<MieComplex, 1> sPlus = MieFlt(1.5) * (a + b) * (eigenPi + eigenTau);
     sci::GridData<MieComplex, 1> sMinus = MieFlt(1.5) * (a - b) * (eigenPi - eigenTau);
 
+    //s and t are intermediate calculations for calculating eigenPi and eigenTau
+    sci::GridData<MieFlt, 1> s(mus.size());
+    sci::GridData<MieFlt, 1> t(mus.size());
+
+    //loop through each of the remaining sum terms
     for (size_t i = 2; i < N; ++i)
     {
         //MieFlt n = MieFlt(i + 1);
@@ -326,7 +323,6 @@ int main()
         s = mus * eigenPi;
         t = s - eigenPiPrev;
         eigenPiNext = s + t *MieFlt(i + 1) / MieFlt(i);
-        std::swap(eigenTauPrev, eigenTau);
         eigenTau = MieFlt(i) * t - eigenPiPrev;
 
         //calculate new a and b
