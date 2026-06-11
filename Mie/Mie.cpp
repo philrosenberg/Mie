@@ -150,16 +150,37 @@ constexpr FLT1 getLogarithmicDerivative(FLT1 x, size_t n, FLT2 accuracy)
     return -FLT1(n) / x + getBesselMinusHalfOverPlusHalfRatio(MieFlt(1)/x, n, accuracy);
 }
 
+template<class T>
+concept IsComplex = requires(T t)
+{
+    t.real();
+    t.imag();
+};
+
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
 template<class FLT>
-std::vector<MieComplex> getLogarithmicDerivativesForward(FLT z, size_t N)
+std::vector<FLT> getLogarithmicDerivativesForward(FLT z, size_t N)
+requires (IsComplex<FLT>)
 {
-    std::vector<MieComplex>A(N);
+    std::vector<FLT>A(N);
 
-    MieComplex exp = std::exp(-MieFlt(2) * im * z);
+    FLT exp = std::exp(-MieFlt(2) * im * z);
     A[1] = -MieFlt(1) / z + (MieFlt(1) - exp) / ((MieFlt(1) - exp) / z - im * (MieFlt(1) + exp));
     for (size_t i = 2; i < A.size(); ++i)
-        //A[i] = MieFlt(1) / (MieFlt(i + 1) / z - A[i - 1]) - MieFlt(i + 1) / z;
+        A[i] = MieFlt(1) / (MieFlt(i) / z - A[i - 1]) - MieFlt(i) / z;
+
+    return A;
+}
+
+template<class FLT>
+std::vector<FLT> getLogarithmicDerivativesForward(FLT z, size_t N)
+    requires (!IsComplex<FLT>)
+{
+    std::vector<FLT>A(N);
+
+    FLT tanz = std::tan(z);
+    A[1] = -MieFlt(1) / z + (z*tanz)/(tanz-z);
+    for (size_t i = 2; i < A.size(); ++i)
         A[i] = MieFlt(1) / (MieFlt(i) / z - A[i - 1]) - MieFlt(i) / z;
 
     return A;
@@ -167,9 +188,9 @@ std::vector<MieComplex> getLogarithmicDerivativesForward(FLT z, size_t N)
 
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
 template<class FLT>
-std::vector<MieComplex> getLogarithmicDerivativesBackward(FLT z, size_t N)
+std::vector<FLT> getLogarithmicDerivativesBackward(FLT z, size_t N)
 {
-    std::vector<MieComplex>A(N);
+    std::vector<FLT>A(N);
 
     A.back() = getLogarithmicDerivative(z, N, 0.0000001);
     for (size_t i = N - 2; i != size_t(-1); --i)
@@ -183,7 +204,7 @@ std::vector<MieComplex> getLogarithmicDerivativesBackward(FLT z, size_t N)
 
 
 template<class FLT>
-std::vector<MieComplex> getLogarithmicDerivativesFastestStable(FLT refractiveIndex, MieFlt x, size_t N)
+std::vector<FLT> getLogarithmicDerivativesFastestStable(FLT refractiveIndex, MieFlt x, size_t N)
 {
     //calculate A. In some situations this can be done with forward recursion which
     //is faster, If not, then we calculate the last A using the Lentz method and then
@@ -192,9 +213,9 @@ std::vector<MieComplex> getLogarithmicDerivativesFastestStable(FLT refractiveInd
     //I'm not sure if this relationship holds outside these bounds, but let's be conservative and
     //use the more stable method.
     auto z = refractiveIndex * x;
-    if (refractiveIndex.real() < MieFlt(1.05) || refractiveIndex.real() > MieFlt(9.25) ||
+    if (std::real(refractiveIndex) < MieFlt(1.05) || std::real(refractiveIndex) > MieFlt(9.25) ||
         x < MieFlt(1) || x > MieFlt(10000) ||
-        std::abs(refractiveIndex.imag()) * x > (MieFlt(13.78) * refractiveIndex.real() - MieFlt(10.8)) * refractiveIndex.real() + MieFlt(3.9))
+        std::abs(std::imag(refractiveIndex)) * x > (MieFlt(13.78) * std::real(refractiveIndex) - MieFlt(10.8)) * std::real(refractiveIndex) + MieFlt(3.9))
         //Use the stable but slower backwards recursion
         return getLogarithmicDerivativesBackward(z, N);
     else
@@ -228,13 +249,14 @@ int main()
 
     callBH();
 
-    testLogarithmicDerivatives();
+    //testLogarithmicDerivatives();
 
     MieFlt diameter(1.05);
     MieFlt wavelength(0.6328);
     MieFlt x(sci::m_pi * diameter / wavelength); //circumference/wavelength
     //MieFlt x(50); //circumference/wavelength
-    MieComplex refractiveIndex(1.55);
+    //MieComplex refractiveIndex(1.55);
+    MieFlt refractiveIndex(1.55);
 
     using COMPLEX = decltype(refractiveIndex);
 
@@ -248,7 +270,7 @@ int main()
     //In some circumstances it is stable to calculate this forward, but some 
     //circumstances need us to calculate the last element, then work backwards.
     //So we pre-calculate this to satisfy both scenarios
-    std::vector<MieComplex>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
+    std::vector<COMPLEX>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
 
 
 
