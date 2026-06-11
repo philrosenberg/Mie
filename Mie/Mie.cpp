@@ -240,7 +240,7 @@ int main()
 
     auto z = x * refractiveIndex;
     size_t N = nTerms(x);
-    sci::GridData<MieFlt, 1> mus{ 0.5 };//cosines of scattering angle
+    sci::GridData<MieFlt, 1> mus{ 1.0, -0.5, -0.5 };//cosines of scattering angle
     if (N == 0)
         return 1;
 
@@ -263,7 +263,6 @@ int main()
     sci::GridData<MieFlt, 1> sPrev(mus.size());
     sci::GridData<MieFlt, 1> tPrev(mus.size());
     sci::GridData<MieFlt, 1> eigenPiNext(mus.size());
-    sci::GridData<MieFlt, 1> eigenTauNext(mus.size());
     MieFlt psiPrev;
     MieComplex xiPrev;
     MieFlt psiNext;
@@ -280,9 +279,10 @@ int main()
     eigenPiPrev = MieFlt(0.0);
     eigenPi = MieFlt(1.0);
     eigenTauPrev = MieFlt(0.0);
-    eigenTau = mus;
     s = mus * eigenPi;
-    t = s - eigenPi;
+    t = s - eigenPiPrev;
+    eigenTau = t - eigenPiPrev;
+    eigenPiNext = s + MieFlt(2) * t;
     psiPrev = std::sin(x);
     psi = std::sin(x) / x - std::cos(x);
     xiPrev = psiPrev + im * std::cos(x);
@@ -306,6 +306,9 @@ int main()
     MieComplex backscatterTemp = -commonFactor * (a - b);
     MieFlt sign(-1);
 
+    sci::GridData<MieComplex, 1> sPlus = MieFlt(1.5) * (a + b) * (eigenPi + eigenTau);
+    sci::GridData<MieComplex, 1> sMinus = MieFlt(1.5) * (a - b) * (eigenPi - eigenTau);
+
     for (size_t i = 2; i < N; ++i)
     {
         //MieFlt n = MieFlt(i + 1);
@@ -317,6 +320,14 @@ int main()
         std::swap(psi, psiNext);
         std::swap(xiPrev, xi);
         std::swap(xi, xiNext);
+
+        std::swap(eigenPiPrev, eigenPi);
+        std::swap(eigenPi, eigenPiNext);
+        s = mus * eigenPi;
+        t = s - eigenPiPrev;
+        eigenPiNext = s + t *MieFlt(i + 1) / MieFlt(i);
+        std::swap(eigenTauPrev, eigenTau);
+        eigenTau = MieFlt(i) * t - eigenPiPrev;
 
         //calculate new a and b
         MieComplex aPrev = a;
@@ -334,6 +345,12 @@ int main()
         asymmetryParameter += (MieFlt(i * i) - MieFlt(1.0)) / MieFlt(i) * (innerProduct(aPrev, a) + innerProduct( bPrev, b))
             + commonFactor / (MieFlt(i) * MieFlt(i + 1)) * innerProduct(a, b);
         backscatterTemp += sign * commonFactor * (a - b);
+
+        sPlus += MieFlt(2 * i + 1) / MieFlt(i * (i + 1)) * (a + b) * (eigenPi + eigenTau);
+        sMinus += MieFlt(2 * i + 1) / MieFlt(i * (i + 1)) * (a - b) * (eigenPi - eigenTau);
+        //The variables below were just for debugging
+        //sci::GridData<MieComplex, 1> s1 = (sPlus + sMinus) / MieFlt(2);
+        //sci::GridData<MieComplex, 1> s2 = (sPlus - sMinus) / MieFlt(2);
     }
 
     MieFlt invXSquared = MieFlt(1) / (x * x);
@@ -341,26 +358,45 @@ int main()
     scatteringEfficiency *= MieFlt(2) * invXSquared;
     asymmetryParameter *= MieFlt(4) / scatteringEfficiency * invXSquared;
     MieFlt backscatterEfficiency = std::norm(backscatterTemp) * invXSquared;
+    sci::GridData<MieComplex, 1> s1 = (sPlus + sMinus) / MieFlt(2);
+    sci::GridData<MieComplex, 1> s2 = (sPlus - sMinus) / MieFlt(2);
 
     //compare to Scott Prahl code's values
     if (std::abs(extinctionEfficiency - 3.1054257433224577) > 0.00001)
     {
-        std::cout << "Extinction efficiency failed";
+        std::cout << "Extinction efficiency failed\n";
     }
 
     if (std::abs(scatteringEfficiency - 3.1054257433224577) > 0.00001)
     {
-        std::cout << "Scattering efficiency failed";
+        std::cout << "Scattering efficiency failed\n";
     }
 
     if (std::abs(asymmetryParameter - 0.63313677398198109) > 0.00001)
     {
-        std::cout << "Asymmetry parameter failed";
+        std::cout << "Asymmetry parameter failed\n";
     }
 
     if (std::abs(backscatterEfficiency - 2.9253412092248068) > 0.00001)
     {
-        std::cout << "Asymmetry parameter failed";
+        std::cout << "Asymmetry parameter failed\n";
+    }
+
+    std::array<MieComplex, 3> prahlS1{ MieComplex(21.096312269429383, -8.5770007912199411),
+        MieComplex(-0.93011284575019837, 1.3792933605425168),
+        MieComplex(-0.93011284575018260, 1.3792933605424973) };
+    std::array<MieComplex, 3> prahlS2{ MieComplex(21.096312269429383, -8.5770007912199411),
+        MieComplex(-1.9234842479740848, 0.44338173235166872),
+        MieComplex(-1.9234842479740211, 0.44338173235171563) };
+    for (size_t i = 0; i < std::min(prahlS1.size(), mus.size()); ++i)
+    {
+        if (std::abs(s1[i] - prahlS1[i]) > 0.00001)
+            std::cout << "S1[" << i << "] failed\n";
+    }
+    for (size_t i = 0; i < std::min(prahlS2.size(), mus.size()); ++i)
+    {
+        if (std::abs(s2[i] - prahlS2[i]) > 0.00001)
+            std::cout << "S2[" << i << "] failed\n";
     }
 }
 
