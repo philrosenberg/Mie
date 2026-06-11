@@ -18,12 +18,9 @@
     <ClCompile Include="Mie.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bh.h">
+    <ClInclude Include="Mie.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
