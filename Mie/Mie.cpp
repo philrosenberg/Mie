@@ -236,41 +236,24 @@ bool testLogarithmicDerivatives()
     return true;
 }
 
-int main()
+template<class UNITLESS, class COMPLEX, class RI>
+void mie(UNITLESS x, RI refractiveIndex, const sci::GridData<UNITLESS, 1> &mus, MieFlt &extinctionEfficiency,
+MieFlt &scatteringEfficiency, MieFlt &backscatterEfficiency, MieFlt &asymmetryParameter,
+sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2)
 {
-    constexpr MieFlt testBessel = getBesselMinusHalfOverPlusHalfRatio<double>(1.0, 9, 0.0); //test, check it matches with the Lentz paper
-    if (std::abs(testBessel - MieFlt(18.95228198)) > 0.00000001)
-    {
-        std::cout << "Bessel test failed. Result was " << testBessel << " when it should have been 18.95228198" << std::endl;
-        return 1;
-    }
-
-    getBesselMinusHalfOverPlusHalfRatio<std::complex<double>>(std::complex(1.0, 0.01), 9, 0.0); //just checking it compiles really
-
-    callBH();
-
-    //testLogarithmicDerivatives();
-
-    MieFlt diameter(1.05);
-    MieFlt wavelength(0.6328);
-    MieFlt x(sci::m_pi * diameter / wavelength); //circumference/wavelength
-    //MieFlt x(50); //circumference/wavelength
-    //MieComplex refractiveIndex(1.55);
-    MieFlt refractiveIndex(1.55);
-
-    using COMPLEX = decltype(refractiveIndex);
+    using MAYBECOMPLEX = decltype(refractiveIndex);
 
     auto z = x * refractiveIndex;
     size_t N = nTerms(x);
-    sci::GridData<MieFlt, 1> mus{ 1.0, -0.5, -0.5 };//cosines of scattering angle
-    if (N == 0)
-        return 1;
+    //sci::GridData<MieFlt, 1> mus{ 1.0, -0.5, -0.5 };//cosines of scattering angle
+    if (N < 2)
+        throw("Failure in Mie code - the number of terms needed was less than 2. Did you pass in negative sizes or something?");
 
     //logarithmic derivative, called A in Wiscombe or D in Bohren anf Huffman
     //In some circumstances it is stable to calculate this forward, but some 
     //circumstances need us to calculate the last element, then work backwards.
     //So we pre-calculate this to satisfy both scenarios
-    std::vector<COMPLEX>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
+    std::vector<MAYBECOMPLEX>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
 
 
 
@@ -310,17 +293,17 @@ int main()
     //calculate the first a and b terms from the values above
     //Note that the summing over a and b starts with index 1
     //and the prev suffixed variables above have index 0
-    COMPLEX aFirstTerm = A[1] / refractiveIndex + MieFlt(1) / x;
+    MAYBECOMPLEX aFirstTerm = A[1] / refractiveIndex + MieFlt(1) / x;
     MieComplex a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
-    COMPLEX bFirstTerm = A[1] * refractiveIndex + MieFlt(1) / x;
+    MAYBECOMPLEX bFirstTerm = A[1] * refractiveIndex + MieFlt(1) / x;
     MieComplex b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
 
 
     //These are the values we will be summing
     MieFlt commonFactor(3);
-    MieFlt extinctionEfficiency(commonFactor * (a.real() + b.real()));
-    MieFlt scatteringEfficiency(commonFactor * (std::norm(a) + std::norm(b)));
-    MieFlt asymmetryParameter = commonFactor / MieFlt(2) * innerProduct(a, b); //note first term is 0 for n=1
+    extinctionEfficiency = (commonFactor * (a.real() + b.real()));
+    scatteringEfficiency = (commonFactor * (std::norm(a) + std::norm(b)));
+    asymmetryParameter = commonFactor / MieFlt(2) * innerProduct(a, b); //note first term is 0 for n=1
     MieComplex backscatterTemp = -commonFactor * (a - b);
 
     sci::GridData<MieComplex, 1> sPlus = MieFlt(1.5) * (a + b) * (eigenPi + eigenTau);
@@ -347,7 +330,7 @@ int main()
         std::swap(eigenPi, eigenPiNext);
         s = mus * eigenPi;
         t = s - eigenPiPrev;
-        eigenPiNext = s + t *MieFlt(i + 1) / MieFlt(i);
+        eigenPiNext = s + t * MieFlt(i + 1) / MieFlt(i);
         eigenTau = MieFlt(i) * t - eigenPiPrev;
 
         //calculate new a and b
@@ -363,7 +346,7 @@ int main()
 
         extinctionEfficiency += commonFactor * (a.real() + b.real());
         scatteringEfficiency += commonFactor * (std::norm(a) + std::norm(b));
-        asymmetryParameter += (MieFlt(i * i) - MieFlt(1.0)) / MieFlt(i) * (innerProduct(aPrev, a) + innerProduct( bPrev, b))
+        asymmetryParameter += (MieFlt(i * i) - MieFlt(1.0)) / MieFlt(i) * (innerProduct(aPrev, a) + innerProduct(bPrev, b))
             + commonFactor / (MieFlt(i) * MieFlt(i + 1)) * innerProduct(a, b);
         backscatterTemp += sign * commonFactor * (a - b);
 
@@ -378,9 +361,30 @@ int main()
     extinctionEfficiency *= MieFlt(2) * invXSquared;
     scatteringEfficiency *= MieFlt(2) * invXSquared;
     asymmetryParameter *= MieFlt(4) / scatteringEfficiency * invXSquared;
-    MieFlt backscatterEfficiency = std::norm(backscatterTemp) * invXSquared;
-    sci::GridData<MieComplex, 1> s1 = (sPlus + sMinus) / MieFlt(2);
-    sci::GridData<MieComplex, 1> s2 = (sPlus - sMinus) / MieFlt(2);
+    backscatterEfficiency = std::norm(backscatterTemp) * invXSquared;
+    s1 = (sPlus + sMinus) / MieFlt(2);
+    s2 = (sPlus - sMinus) / MieFlt(2);
+}
+
+void testPrahl()
+{
+    MieFlt diameter(1.05);
+    MieFlt wavelength(0.6328);
+    MieFlt x(sci::m_pi * diameter / wavelength); //circumference/wavelength
+    //MieFlt x(50); //circumference/wavelength
+    //MieComplex refractiveIndex(1.55);
+    MieFlt refractiveIndex(1.55);
+    sci::GridData<MieFlt, 1> mus{ 1.0, -0.5, -0.5 };//cosines of scattering angle
+
+    MieFlt extinctionEfficiency;
+    MieFlt scatteringEfficiency;
+    MieFlt asymmetryParameter;
+    MieFlt backscatterEfficiency;
+    sci::GridData<MieComplex, 1> s1;
+    sci::GridData<MieComplex, 1> s2;
+
+    mie(x, refractiveIndex, mus, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter, s1, s2);
+
 
     //compare to Scott Prahl code's values
     if (std::abs(extinctionEfficiency - 3.1054257433224577) > 0.00001)
@@ -403,12 +407,19 @@ int main()
         std::cout << "Asymmetry parameter failed\n";
     }
 
+
     std::array<MieComplex, 3> prahlS1{ MieComplex(21.096312269429383, -8.5770007912199411),
         MieComplex(-0.93011284575019837, 1.3792933605425168),
         MieComplex(-0.93011284575018260, 1.3792933605424973) };
     std::array<MieComplex, 3> prahlS2{ MieComplex(21.096312269429383, -8.5770007912199411),
         MieComplex(-1.9234842479740848, 0.44338173235166872),
         MieComplex(-1.9234842479740211, 0.44338173235171563) };
+
+    if (s1.size() != prahlS1.size())
+        std::cout << "S1 is the wrong size\n";
+    if (s2.size() != prahlS2.size())
+        std::cout << "S1 is the wrong size\n";
+
     for (size_t i = 0; i < std::min(prahlS1.size(), mus.size()); ++i)
     {
         if (std::abs(s1[i] - prahlS1[i]) > 0.00001)
@@ -419,4 +430,24 @@ int main()
         if (std::abs(s2[i] - prahlS2[i]) > 0.00001)
             std::cout << "S2[" << i << "] failed\n";
     }
+}
+
+int main()
+{
+    constexpr MieFlt testBessel = getBesselMinusHalfOverPlusHalfRatio<double>(1.0, 9, 0.0); //test, check it matches with the Lentz paper
+    if (std::abs(testBessel - MieFlt(18.95228198)) > 0.00000001)
+    {
+        std::cout << "Bessel test failed. Result was " << testBessel << " when it should have been 18.95228198" << std::endl;
+        return 1;
+    }
+
+    getBesselMinusHalfOverPlusHalfRatio<std::complex<double>>(std::complex(1.0, 0.01), 9, 0.0); //just checking it compiles really
+
+    callBH();
+
+    testPrahl();
+
+    testLogarithmicDerivatives();
+
+    
 }
