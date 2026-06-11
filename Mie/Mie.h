@@ -44,18 +44,6 @@ constexpr size_t nTerms(FLT x)
 }
 
 template<class FLT>
-struct Complex
-{
-    inline static constexpr FLT realUnity = 1.0;
-};
-
-template<class FLT>
-struct Complex<std::complex<FLT>>
-{
-    inline static constexpr FLT realUnity = 1.0;
-};
-
-template<class FLT>
 constexpr inline bool continueTest(FLT ratio, FLT accuracySquared)
 {
     FLT diffFromUnity = ratio - FLT(1);
@@ -96,7 +84,7 @@ constexpr MAYBECOMPLEX getBesselMinusHalfOverPlusHalfRatio(MAYBECOMPLEX xInverse
     MAYBECOMPLEX bottom = FLT(2) * (nu + FLT(1)) * xInverse;
     FLT add = FLT(1);
     MAYBECOMPLEX a = FLT(2) * (nu + add) * xInverse;
-    top = a - Complex<FLT>::realUnity / top;
+    top = a - FLT(1) / top;
     MAYBECOMPLEX ratio = top / bottom;
     result *= ratio;
 
@@ -105,8 +93,8 @@ constexpr MAYBECOMPLEX getBesselMinusHalfOverPlusHalfRatio(MAYBECOMPLEX xInverse
     {
         add += FLT(1);
         a = FLT(2) * (nu + add) * xInverse;
-        bottom = a - Complex<FLT>::realUnity / bottom;
-        top = a - Complex<FLT>::realUnity / top;
+        bottom = a - FLT(1) / bottom;
+        top = a - FLT(1) / top;
         ratio = top / bottom;
         FLT normRatio = std::norm(ratio);
         result *= ratio;
