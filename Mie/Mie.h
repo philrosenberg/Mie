@@ -70,8 +70,8 @@ constexpr inline bool continueTest(std::complex<FLT> ratio, FLT accuracySquared)
     return std::abs(diffFromUnitySquared) > accuracySquared;
 }
 
-template<class FLT, class ACC>
-constexpr FLT getBesselMinusHalfOverPlusHalfRatio(FLT xInverse, size_t order, ACC accuracy)
+template<class MAYBECOMPLEX, class ACC>
+constexpr MAYBECOMPLEX getBesselMinusHalfOverPlusHalfRatio(MAYBECOMPLEX xInverse, size_t order, ACC accuracy)
 {
     //From Lentz(1976) Applied Optics Vol 15, Issue 3,pp. 668-671 Generating Bessel functions in Mie scattering calculations using continued fractions
     //
@@ -85,17 +85,19 @@ constexpr FLT getBesselMinusHalfOverPlusHalfRatio(FLT xInverse, size_t order, AC
     //
     // If xInverse is complex, then the result will be complex, if xInverse is real the result will be real
 
-    FLT nu = FLT(order) + FLT(0.5);
+    using FLT = decltype(std::real(xInverse));
+
+    MAYBECOMPLEX nu = static_cast<FLT>(order) + FLT(0.5);
     auto accuracySquared = std::norm(accuracy);
 
-    FLT top = FLT(2) * nu * xInverse;
-    FLT result = top;
+    MAYBECOMPLEX top = FLT(2) * nu * xInverse;
+    MAYBECOMPLEX result = top;
 
-    FLT bottom = FLT(2) * (nu + FLT(1)) * xInverse;
+    MAYBECOMPLEX bottom = FLT(2) * (nu + FLT(1)) * xInverse;
     FLT add = FLT(1);
-    FLT a = FLT(2) * (nu + add) * xInverse;
+    MAYBECOMPLEX a = FLT(2) * (nu + add) * xInverse;
     top = a - Complex<FLT>::realUnity / top;
-    FLT ratio = top / bottom;
+    MAYBECOMPLEX ratio = top / bottom;
     result *= ratio;
 
     FLT normRatio = std::norm(ratio);
@@ -116,7 +118,7 @@ constexpr FLT getBesselMinusHalfOverPlusHalfRatio(FLT xInverse, size_t order, AC
 template<class MAYBECOMPLEX, class FLT>
 constexpr MAYBECOMPLEX getLogarithmicDerivative(MAYBECOMPLEX x, size_t n, FLT accuracy)
 {
-    return -MAYBECOMPLEX(n) / x + getBesselMinusHalfOverPlusHalfRatio(FLT(1) / x, n, accuracy);
+    return -MAYBECOMPLEX(static_cast<FLT>(n)) / x + getBesselMinusHalfOverPlusHalfRatio(FLT(1) / x, n, accuracy);
 }
 
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
