@@ -17,9 +17,6 @@
 
 #include"bh.h"
 
-//using MieFlt = double;
-using MieComplex = std::complex<double>;
-constexpr MieComplex im(0.0, 1.0);
 
 template<class T>
 concept IsComplex = requires(T t)
@@ -166,6 +163,7 @@ requires (IsComplex<COMPLEX>)
 {
     std::vector<COMPLEX>A(N);
     using FLT = decltype(z.real());
+    const COMPLEX im(0, 1);
 
     COMPLEX exp = std::exp(-FLT(2) * im * z);
     A[1] = -FLT(1) / z + (FLT(1) - exp) / ((FLT(1) - exp) / z - im * (FLT(1) + exp));
@@ -229,7 +227,7 @@ std::vector<MAYBECOMPLEX> getLogarithmicDerivativesFastestStable(MAYBECOMPLEX re
 
 bool testLogarithmicDerivatives()
 {
-    MieComplex z(8.0798703484513279);
+    std::complex<double> z(8.0798703484513279);
     size_t N(14);
     auto testForward = getLogarithmicDerivativesForward(z, N);
     auto testBackward = getLogarithmicDerivativesBackward(z, N);
@@ -270,9 +268,9 @@ sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2)
     FLT psiPrev = std::sin(x);
     FLT psi = std::sin(x) / x - std::cos(x);
     FLT psiNext(0); //this isn't used until it is defined in the loop
-    MieComplex xiPrev = psiPrev + im * std::cos(x);
-    MieComplex xi = psi + im * (std::cos(x) / x + std::sin(x));
-    MieComplex xiNext(FLT(0)); //this isn't used until it is defined in the loop
+    COMPLEX xiPrev = psiPrev + COMPLEX(FLT(0), std::cos(x));
+    COMPLEX xi = psi + COMPLEX(FLT(0), (std::cos(x) / x + std::sin(x)));
+    COMPLEX xiNext(FLT(0)); //this isn't used until it is defined in the loop
     FLT sign(-1);
 
 
@@ -297,9 +295,9 @@ sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2)
     //Note that the summing over a and b starts with index 1
     //and the prev suffixed variables above have index 0
     MAYBECOMPLEX aFirstTerm = A[1] / refractiveIndex + FLT(1) / x;
-    MieComplex a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
+    COMPLEX a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
     MAYBECOMPLEX bFirstTerm = A[1] * refractiveIndex + FLT(1) / x;
-    MieComplex b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
+    COMPLEX b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
 
 
     //These are the values we will be summing
@@ -307,10 +305,10 @@ sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2)
     extinctionEfficiency = (commonFactor * (a.real() + b.real()));
     scatteringEfficiency = (commonFactor * (std::norm(a) + std::norm(b)));
     asymmetryParameter = commonFactor / FLT(2) * innerProduct(a, b); //note first term is 0 for n=1
-    MieComplex backscatterTemp = -commonFactor * (a - b);
+    COMPLEX backscatterTemp = -commonFactor * (a - b);
 
-    sci::GridData<MieComplex, 1> sPlus = FLT(1.5) * (a + b) * (eigenPi + eigenTau);
-    sci::GridData<MieComplex, 1> sMinus = FLT(1.5) * (a - b) * (eigenPi - eigenTau);
+    sci::GridData<COMPLEX, 1> sPlus = FLT(1.5) * (a + b) * (eigenPi + eigenTau);
+    sci::GridData<COMPLEX, 1> sMinus = FLT(1.5) * (a - b) * (eigenPi - eigenTau);
 
     //s and t are intermediate calculations for calculating eigenPi and eigenTau
     sci::GridData<FLT, 1> s(mus.size());
@@ -337,8 +335,8 @@ sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2)
         eigenTau = FLT(i) * t - eigenPiPrev;
 
         //calculate new a and b
-        MieComplex aPrev = a;
-        MieComplex bPrev = b;
+        COMPLEX aPrev = a;
+        COMPLEX bPrev = b;
         sign = sign * FLT(-1);
         auto aFirstTerm = A[i] / refractiveIndex + FLT(i) / x;
         a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
@@ -383,8 +381,8 @@ void testPrahl()
     double scatteringEfficiency;
     double asymmetryParameter;
     double backscatterEfficiency;
-    sci::GridData<MieComplex, 1> s1;
-    sci::GridData<MieComplex, 1> s2;
+    sci::GridData<std::complex<double>, 1> s1;
+    sci::GridData<std::complex<double>, 1> s2;
 
     mie(x, refractiveIndex, mus, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter, s1, s2);
 
@@ -411,12 +409,12 @@ void testPrahl()
     }
 
 
-    std::array<MieComplex, 3> prahlS1{ MieComplex(21.096312269429383, -8.5770007912199411),
-        MieComplex(-0.93011284575019837, 1.3792933605425168),
-        MieComplex(-0.93011284575018260, 1.3792933605424973) };
-    std::array<MieComplex, 3> prahlS2{ MieComplex(21.096312269429383, -8.5770007912199411),
-        MieComplex(-1.9234842479740848, 0.44338173235166872),
-        MieComplex(-1.9234842479740211, 0.44338173235171563) };
+    std::array<std::complex<double>, 3> prahlS1{ std::complex<double>(21.096312269429383, -8.5770007912199411),
+        std::complex<double>(-0.93011284575019837, 1.3792933605425168),
+        std::complex<double>(-0.93011284575018260, 1.3792933605424973) };
+    std::array<std::complex<double>, 3> prahlS2{ std::complex<double>(21.096312269429383, -8.5770007912199411),
+        std::complex<double>(-1.9234842479740848, 0.44338173235166872),
+        std::complex<double>(-1.9234842479740211, 0.44338173235171563) };
 
     if (s1.size() != prahlS1.size())
         std::cout << "S1 is the wrong size\n";
