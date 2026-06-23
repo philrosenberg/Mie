@@ -189,7 +189,7 @@ sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPL
 //for large values of RI. When set to true the calculation uses maths that is stable
 //as RI -> infinity (conducting sphere). When set to false the calculation uses maths
 //that is faster
-template<bool LARGE_RI, class FLT, class COMPLEX, class RI>
+template<class FLT, class COMPLEX, class RI>
 void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2,
     FLT& extinctionEfficiency, FLT& scatteringEfficiency,
@@ -241,28 +241,18 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     sci::GridData<FLT, 1>  eigenTau(mus);
     sci::GridData<FLT, 1>  eigenPiNext = FLT(3) * mus;
 
-
+    auto reciprocalRefractiveIndex = FLT(1.0) / refractiveIndex;
     //a and b are used for both angular resolved and overall scattering properties
     // A will alsways have a size of at least 2, so this is safe
     //calculate the first a and b terms from the values above
     //Note that the summing over a and b starts with index 1
     //and the prev suffixed variables above have index 0
-    MAYBECOMPLEX aFirstTerm = A[1] / refractiveIndex + FLT(1) / x;
+    MAYBECOMPLEX aFirstTerm = A[1] * reciprocalRefractiveIndex + FLT(1) / x;
     COMPLEX a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
-    MAYBECOMPLEX bFirstTerm;
-    COMPLEX b;
-    if constexpr (LARGE_RI)
-    {
-        //this formulation is more stable when using large refractive indices
-        //but uses more divides, so will be slower
-        bFirstTerm = A[1] + FLT(1) / (refractiveIndex *x);
-        b = (bFirstTerm * psi - psiPrev/refractiveIndex) / (bFirstTerm * xi - xiPrev/refractiveIndex);
-    }
-    else
-    {
-        bFirstTerm = A[1] * refractiveIndex + FLT(1) / x;
-        b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
-    }
+    //this formulation is more stable when using large refractive indices
+    MAYBECOMPLEX bFirstTerm = A[1] + FLT(1) * reciprocalRefractiveIndex / x;
+    COMPLEX b = (bFirstTerm * psi - psiPrev * reciprocalRefractiveIndex) / (bFirstTerm * xi - xiPrev * reciprocalRefractiveIndex);
+    
 
 
     //These are the values we will be summing
@@ -303,20 +293,13 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
         COMPLEX aPrev = a;
         COMPLEX bPrev = b;
         sign = sign * FLT(-1);
-        aFirstTerm = A[i] / refractiveIndex + FLT(i) / x;
+        aFirstTerm = A[i] * reciprocalRefractiveIndex + FLT(i) / x;
         a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
-        if constexpr (LARGE_RI)
-        {
-            //this formulation is more stable when using large refractive indices
-            //but uses more divides, so will be slower
-            bFirstTerm = A[i] + FLT(i) / (refractiveIndex * x);
-            b = (bFirstTerm * psi - psiPrev / refractiveIndex) / (bFirstTerm * xi - xiPrev / refractiveIndex);
-        }
-        else
-        {
-            bFirstTerm = A[i] * refractiveIndex + FLT(i) / x;
-            b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
-        }
+        
+        //this formulation is more stable when using large refractive indices
+        bFirstTerm = A[i] + FLT(i) * reciprocalRefractiveIndex / x;
+        b = (bFirstTerm * psi - psiPrev * reciprocalRefractiveIndex) / (bFirstTerm * xi - xiPrev * reciprocalRefractiveIndex);
+        
 
         commonFactor = (FLT(2) * i + FLT(1));
 
