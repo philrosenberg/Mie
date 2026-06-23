@@ -535,9 +535,10 @@ void TestsFromPrahl()
 
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 
-		printf("    x        Qsca       Qext      Qback    g\n");
-		printf("%7.3f %10.6f %10.6f %10.6f \n", 5.213, 3.10543, 3.10543, 2.92534);
-		printf("%7.3f %10.6f %10.6f %10.6f %10.6f \n", x, qsca, qext, qback, g);
+		printf("          x        Qsca       Qext      Qback    g\n");
+		printf("BH    %7.3f %10.6f %10.6f %10.6f \n", 5.213, 3.105430, 3.10543, 2.92534);
+		printf("Prahl %7.3f %10.6f %10.6f %10.6f %10.6f \n", 5.213, 3.104996, 3.104996, 2.92534, 0.633104);
+		printf("This  %7.3f %10.6f %10.6f %10.6f %10.6f \n", x, qsca, qext, qback, g);
 	}
 
 	
@@ -554,39 +555,39 @@ void TestsFromPrahl()
 
 		printf("\n***********************************************\n");
 		printf("Second Mie Test -- Dave Table 2\n");
-		printf("          n                 Qa            Dave\n");
+		printf("          n                 Qa           Dave         Prahl\n");
 
 		m = std::complex<double>(1.342, 0.0);
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
-		printf("%10.5g%-+7.4fi    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.0);
+		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.0, 0.0);
 
 		m = std::complex<double>(1.342, -0.0001);
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
-		printf("%10.5g%-+7.4fi    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.0535);
+		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.0535, 0.05355);
 
 		m = std::complex<double>(1.342, -0.01);
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
-		printf("%10.5g%-+7.4fi    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9649);
+		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9649, 0.96495);
 
 		m = std::complex<double>(1.342, -0.2);
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
-		printf("%10.5g%-+7.4fi    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9542);
+		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9542, 0.95419);
 
 		m = std::complex<double>(1.342, -0.4);
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
-		printf("%10.5g%-+7.4fi    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9221);
+		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9221, 0.92111);
 
 		m = std::complex<double>(1.342, -0.6);
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
-		printf("%10.5g%-+7.4fi    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.8808);
+		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.8808, 0.88081);
 
 		m = std::complex<double>(1.342, -0.8);
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
-		printf("%10.5g%-+7.4fi    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.8369);
+		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.8369, 0.83686);
 
 		m = std::complex<double>(1.342, -1.0);
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
-		printf("%10.5g%-+7.4fi    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.7910);
+		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.7910, 0.79097);
 
 		printf("\n");
 	}
