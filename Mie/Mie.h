@@ -32,6 +32,9 @@ inline constexpr auto innerProduct(T v1, T v2)
 template<class FLT>
 constexpr size_t nTerms(FLT x)
 {
+    //to match prahl
+    return size_t(x + FLT(4.05) * std::pow(x, FLT(1.0) / FLT(3.0))) + size_t(2);
+
     if (x <= FLT(0.02))
         return size_t(0);
     if (x <= FLT(8.0))
@@ -111,10 +114,10 @@ constexpr MAYBECOMPLEX getLogarithmicDerivative(MAYBECOMPLEX x, size_t n, FLT ac
 
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
 template<class COMPLEX>
-std::vector<COMPLEX> getLogarithmicDerivativesForward(COMPLEX z, size_t N)
+sci::GridData<COMPLEX, 1> getLogarithmicDerivativesForward(COMPLEX z, size_t N)
     requires (IsComplex<COMPLEX>)
 {
-    std::vector<COMPLEX>A(N);
+    sci::GridData<COMPLEX, 1>A(N);
     using FLT = decltype(z.real());
     const COMPLEX im(0, 1);
 
@@ -127,10 +130,10 @@ std::vector<COMPLEX> getLogarithmicDerivativesForward(COMPLEX z, size_t N)
 }
 
 template<class FLT>
-std::vector<FLT> getLogarithmicDerivativesForward(FLT z, size_t N)
+sci::GridData<FLT, 1> getLogarithmicDerivativesForward(FLT z, size_t N)
     requires (!IsComplex<FLT>)
 {
-    std::vector<FLT>A(N);
+    sci::GridData<FLT, 1>A(N);
 
     FLT tanz = std::tan(z);
     A[1] = -FLT(1) / z + (z * tanz) / (tanz - z);
@@ -142,9 +145,9 @@ std::vector<FLT> getLogarithmicDerivativesForward(FLT z, size_t N)
 
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
 template<class MAYBECOMPLEX>
-std::vector<MAYBECOMPLEX> getLogarithmicDerivativesBackward(MAYBECOMPLEX z, size_t N)
+sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesBackward(MAYBECOMPLEX z, size_t N)
 {
-    std::vector<MAYBECOMPLEX>A(N);
+    sci::GridData<MAYBECOMPLEX, 1>A(N);
     using FLT = decltype(std::real(z));
 
     A.back() = getLogarithmicDerivative(z, N, 0.0000001);
@@ -159,7 +162,7 @@ std::vector<MAYBECOMPLEX> getLogarithmicDerivativesBackward(MAYBECOMPLEX z, size
 
 
 template<class MAYBECOMPLEX, class FLT>
-std::vector<MAYBECOMPLEX> getLogarithmicDerivativesFastestStable(MAYBECOMPLEX refractiveIndex, FLT x, size_t N)
+sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPLEX refractiveIndex, FLT x, size_t N)
 {
     //calculate A. In some situations this can be done with forward recursion which
     //is faster, If not, then we calculate the last A using the Lentz method and then
@@ -179,9 +182,10 @@ std::vector<MAYBECOMPLEX> getLogarithmicDerivativesFastestStable(MAYBECOMPLEX re
 }
 
 template<class FLT, class COMPLEX, class RI>
-void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus, FLT& extinctionEfficiency,
-    FLT& scatteringEfficiency, FLT& backscatterEfficiency, FLT& asymmetryParameter,
-    sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2)
+void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
+    sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2,
+    FLT& extinctionEfficiency, FLT& scatteringEfficiency,
+    FLT& backscatterEfficiency, FLT& asymmetryParameter)
 {
     using MAYBECOMPLEX = decltype(refractiveIndex);
 
@@ -195,7 +199,7 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus, FLT& extin
     //In some circumstances it is stable to calculate this forward, but some 
     //circumstances need us to calculate the last element, then work backwards.
     //So we pre-calculate this to satisfy both scenarios
-    std::vector<MAYBECOMPLEX>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
+    sci::GridData<MAYBECOMPLEX, 1>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
 
 
 
