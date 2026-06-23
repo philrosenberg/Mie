@@ -39,7 +39,7 @@ void testPrahl()
     sci::GridData<std::complex<double>, 1> s1;
     sci::GridData<std::complex<double>, 1> s2;
 
-    mie(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter);
+    mie<false>(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter);
 
 
     //compare to Scott Prahl code's values
@@ -533,7 +533,7 @@ void TestsFromPrahl()
 		for (i = 0; i < nangles; ++i)
 			mu[i] = cos(mu[i]);
 
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 
 		printf("          x        Qsca       Qext      Qback    g\n");
 		printf("BH    %7.3f %10.6f %10.6f %10.6f \n", 5.213, 3.105430, 3.10543, 2.92534);
@@ -558,79 +558,79 @@ void TestsFromPrahl()
 		printf("          n                 Qa           Dave         Prahl\n");
 
 		m = std::complex<double>(1.342, 0.0);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.0, 0.0);
 
 		m = std::complex<double>(1.342, -0.0001);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.0535, 0.05355);
 
 		m = std::complex<double>(1.342, -0.01);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9649, 0.96495);
 
 		m = std::complex<double>(1.342, -0.2);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9542, 0.95419);
 
 		m = std::complex<double>(1.342, -0.4);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9221, 0.92111);
 
 		m = std::complex<double>(1.342, -0.6);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.8808, 0.88081);
 
 		m = std::complex<double>(1.342, -0.8);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.8369, 0.83686);
 
 		m = std::complex<double>(1.342, -1.0);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		mie<false>(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.7910, 0.79097);
 
 		printf("\n");
 	}
 
 
-	/*
+	
 
 	{
 		long		    nangles = 0;
-		std::complex<double>* s1 = NULL;
-		std::complex<double>* s2 = NULL;
-		double* mu = NULL;
+		sci::GridData<std::complex<double>, 1> s1;
+		sci::GridData<std::complex<double>, 1> s2;
+		sci::GridData<double, 1> mu;
 		std::complex<double>    m;
 		double		    x = 20;
 		double		    qext, qsca, qback, g;
 
 		printf("\n***********************************************\n");
 		printf("Third Mie Test -- van de Hulst page 161\n");
-		printf(" x          Qs    vdH       Qs*g   vdH\n");
+		printf(" x          Qs   Prahl    vdH       Qs*g   Prahl   vdH\n");
 
-		m = std::complex<double>(0.0, 0.0);
+		m = std::complex<double>(std::numeric_limits<double>::infinity(), 0.0);
 		x = 0.3;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
-		printf("%4.1f   %7.3f %7.3f   %7.3f %7.3f\n", x, qsca, 0.028, qsca * g, -0.011);
-		ez_Mie(x, 0.0, &qsca, &g);
-		printf("%4.1f   %7.3f %7.3f   %7.3f %7.3f [ez Mie]\n", x, qsca, 0.028, qsca * g, -0.011);
+		mie<true>(x, m, mu, s1, s2, qext, qsca, qback, g);
+		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 0.028, 0.028, qsca * g, -0.010, -0.011);
+		//ez_Mie(x, 0.0, &qsca, &g);
+		//printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f [ez Mie]\n", x, qsca, 0.028, 0.028, qsca * g, -0.10, -0.011);
 
 		x = 1.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
-		printf("%4.1f   %7.3f %7.3f   %7.3f %7.3f\n", x, qsca, 2.036, qsca * g, -0.385);
+		mie<true>(x, m, mu, s1, s2, qext, qsca, qback, g);
+		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 2.036, 2.036, qsca * g, -0.384, -0.385);
 
 		x = 1.5;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
-		printf("%4.1f   %7.3f %7.3f   %7.3f %7.3f\n", x, qsca, 2.155, qsca * g, 0.156);
+		mie<true>(x, m, mu, s1, s2, qext, qsca, qback, g);
+		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 2.154, 2.155, qsca * g, 0.156, 0.156);
 
 		x = 5.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
-		printf("%4.1f   %7.3f %7.3f   %7.3f %7.3f\n", x, qsca, 2.116, qsca * g, 0.965);
+		mie<true>(x, m, mu, s1, s2, qext, qsca, qback, g);
+		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 2.116, 2.116, qsca * g, 0.965, 0.965);
 
 		printf("\n");
 	}
 
-
+	/*
 
 	{
 		long		    nangles = 0;

@@ -170,6 +170,10 @@ sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPL
     //wiscombe found a limiting relationship from m.real from 1.05 to 9.25 and x from 1 to 10,000
     //I'm not sure if this relationship holds outside these bounds, but let's be conservative and
     //use the more stable method.
+
+    if (std::real(refractiveIndex) == std::numeric_limits<double>::infinity())
+        return sci::GridData<MAYBECOMPLEX, 1>(N, MAYBECOMPLEX(1.0)); //avoid nans when refractiveIndex.real() is infinity. A cancels out anyway in this case
+
     auto z = refractiveIndex * x;
     if (std::real(refractiveIndex) < FLT(1.05) || std::real(refractiveIndex) > FLT(9.25) ||
         x < FLT(1) || x > FLT(10000) ||
@@ -181,7 +185,11 @@ sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPL
         return getLogarithmicDerivativesForward(z, N);
 }
 
-template<class FLT, class COMPLEX, class RI>
+//Set the template argument LARGE_RI to false for intermediate values of RI and true
+//for large values of RI. When set to true the calculation uses maths that is stable
+//as RI -> infinity (conducting sphere). When set to false the calculation uses maths
+//that is faster
+template<bool LARGE_RI, class FLT, class COMPLEX, class RI>
 void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2,
     FLT& extinctionEfficiency, FLT& scatteringEfficiency,
@@ -241,8 +249,20 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     //and the prev suffixed variables above have index 0
     MAYBECOMPLEX aFirstTerm = A[1] / refractiveIndex + FLT(1) / x;
     COMPLEX a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
-    MAYBECOMPLEX bFirstTerm = A[1] * refractiveIndex + FLT(1) / x;
-    COMPLEX b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
+    MAYBECOMPLEX bFirstTerm;
+    COMPLEX b;
+    if constexpr (LARGE_RI)
+    {
+        //this formulation is more stable when using large refractive indices
+        //but uses more divides, so will be slower
+        bFirstTerm = A[1] + FLT(1) / (refractiveIndex *x);
+        b = (bFirstTerm * psi - psiPrev/refractiveIndex) / (bFirstTerm * xi - xiPrev/refractiveIndex);
+    }
+    else
+    {
+        bFirstTerm = A[1] * refractiveIndex + FLT(1) / x;
+        b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
+    }
 
 
     //These are the values we will be summing
@@ -283,10 +303,20 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
         COMPLEX aPrev = a;
         COMPLEX bPrev = b;
         sign = sign * FLT(-1);
-        auto aFirstTerm = A[i] / refractiveIndex + FLT(i) / x;
+        aFirstTerm = A[i] / refractiveIndex + FLT(i) / x;
         a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
-        auto bFirstTerm = A[i] * refractiveIndex + FLT(i) / x;
-        b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
+        if constexpr (LARGE_RI)
+        {
+            //this formulation is more stable when using large refractive indices
+            //but uses more divides, so will be slower
+            bFirstTerm = A[i] + FLT(i) / (refractiveIndex * x);
+            b = (bFirstTerm * psi - psiPrev / refractiveIndex) / (bFirstTerm * xi - xiPrev / refractiveIndex);
+        }
+        else
+        {
+            bFirstTerm = A[i] * refractiveIndex + FLT(i) / x;
+            b = (bFirstTerm * psi - psiPrev) / (bFirstTerm * xi - xiPrev);
+        }
 
         commonFactor = (FLT(2) * i + FLT(1));
 
