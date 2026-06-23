@@ -630,40 +630,39 @@ void TestsFromPrahl()
 		printf("\n");
 	}
 
-	/*
 
 	{
 		long		    nangles = 0;
-		std::complex<double>* s1 = NULL;
-		std::complex<double>* s2 = NULL;
-		double* mu = NULL;
+		sci::GridData<std::complex<double>, 1> s1;
+		sci::GridData<std::complex<double>, 1> s2;
+		sci::GridData<double, 1> mu;
 		std::complex<double>    m;
 		double		    x = 20;
 		double		    qext, qsca, qback, g;
 
 		printf("\n***********************************************\n");
 		printf("Fourth Mie Test -- van de Hulst page 277\n");
-		printf(" x          Qs    vdH       Qs*g   vdH\n");
+		printf(" x          Qs   Prahl    vdH       Qs*g   Prahl   vdH\n");
 
 		m = std::complex<double>(3.41, -1.94);
 		x = 1.3;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
-		printf("%4.1f   %7.3f %7.3f   %7.2f %7.2f\n", x, qsca, 1.669, qsca * g, 0.30);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		printf("%4.1f   %7.3f %7.3f %7.3f   %7.2f %7.2f %7.2f\n", x, qsca, 1.670, 1.669, qsca * g, 0.38, 0.30);
 
 		m = std::complex<double>(7.20, -2.65);
 		x = 1.3;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
-		printf("%4.1f   %7.3f %7.3f   %7.2f %7.2f\n", x, qsca, 1.860, qsca * g, 0.31);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		printf("%4.1f   %7.3f %7.3f %7.3f   %7.2f %7.2f %7.2f\n", x, qsca, 1.861, 1.860, qsca * g, 0.20, 0.31);
 
-		m = std::complex<double>(0.0, 0.0);
+		m = std::complex<double>(std::numeric_limits<double>::infinity(), 0.0);
 		x = 1.3;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
-		printf("%4.1f   %7.3f %7.3f   %7.2f %7.2f\n", x, qsca, 2.266, qsca * g, -0.05);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		printf("%4.1f   %7.3f %7.3f %7.3f   %7.2f %7.2f %7.2f\n", x, qsca, 2.265, 2.266, qsca * g, -0.11, -0.05);
 
 		printf("\n");
 	}
 
-
+	/*
 
 	{
 		long		    nangles = 0;
