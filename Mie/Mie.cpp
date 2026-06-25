@@ -1,12 +1,13 @@
-// Mie.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// mie.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include"Mie.h"
+#include"mie.h"
 
 #include <iostream>
 #include<vector>
 #include<cmath>
 #include<numeric>
+#include<random>
 
 
 
@@ -518,7 +519,7 @@ void TestsFromPrahl()
 		rho = 2 * x * (m.real() - 1);
 
 		printf("\n***********************************************\n");
-		printf("First Mie Test -- cf. Bohren and Huffman pg 482\n");
+		printf("First mie Test -- cf. Bohren and Huffman pg 482\n");
 		printf("    index of medium      %7.4f\n", 1.0);
 		printf("    real index of sphere %7.4f\n", m.real());
 		printf("    imag index of sphere %7.4f\n", m.imag());
@@ -554,7 +555,7 @@ void TestsFromPrahl()
 		double		    qext, qsca, qback, g;
 
 		printf("\n***********************************************\n");
-		printf("Second Mie Test -- Dave Table 2\n");
+		printf("Second mie Test -- Dave Table 2\n");
 		printf("          n                 Qa           Dave         Prahl\n");
 
 		m = std::complex<double>(1.342, 0.0);
@@ -605,15 +606,15 @@ void TestsFromPrahl()
 		double		    qext, qsca, qback, g;
 
 		printf("\n***********************************************\n");
-		printf("Third Mie Test -- van de Hulst page 161\n");
+		printf("Third mie Test -- van de Hulst page 161\n");
 		printf(" x          Qs   Prahl    vdH       Qs*g   Prahl   vdH\n");
 
 		m = std::complex<double>(std::numeric_limits<double>::infinity(), 0.0);
 		x = 0.3;
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 0.028, 0.028, qsca * g, -0.010, -0.011);
-		//ez_Mie(x, 0.0, &qsca, &g);
-		//printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f [ez Mie]\n", x, qsca, 0.028, 0.028, qsca * g, -0.10, -0.011);
+		//ez_Mie(x, 0.0, qsca, g);
+		//printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f [ez mie]\n", x, qsca, 0.028, 0.028, qsca * g, -0.10, -0.011);
 
 		x = 1.0;
 		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
@@ -641,7 +642,7 @@ void TestsFromPrahl()
 		double		    qext, qsca, qback, g;
 
 		printf("\n***********************************************\n");
-		printf("Fourth Mie Test -- van de Hulst page 277\n");
+		printf("Fourth mie Test -- van de Hulst page 277\n");
 		printf(" x          Qs   Prahl    vdH       Qs*g   Prahl   vdH\n");
 
 		m = std::complex<double>(3.41, -1.94);
@@ -662,19 +663,17 @@ void TestsFromPrahl()
 		printf("\n");
 	}
 
-	/*
-
 	{
 		long		    nangles = 0;
-		std::complex<double>* s1 = NULL;
-		std::complex<double>* s2 = NULL;
-		double* mu = NULL;
+		sci::GridData<std::complex<double>, 1> s1;
+		sci::GridData<std::complex<double>, 1> s2;
+		sci::GridData<double, 1> mu;
 		std::complex<double>    m;
 		double		    x;
 		double		    qext, qsca, qback, g;
 
 		printf("\n***********************************************\n");
-		printf("Fifth Mie Test -- Wiscombe\n");
+		printf("Fifth mie Test -- Wiscombe\n");
 
 
 		printf("\nNon-Absorbing Spheres m=(0.75+0.0i)\n");
@@ -682,27 +681,27 @@ void TestsFromPrahl()
 		printf("   x            Qs          Qs          g          g\n");
 		m = std::complex<double>(0.75, 0.0);
 		x = 0.099;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000007, g, 0.001448);
-		ez_Mie(x, 0.75, &qsca, &g);
-		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez Mie]\n", x, qsca, 0.000007, g, 0.001448);
+		//ez_Mie(x, 0.75, qsca, g);
+		//printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez mie]\n", x, qsca, 0.000007, g, 0.001448);
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 0.101;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000008, g, 0.001507);
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 10.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.232265, g, 0.896473);
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 1000.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.997908, g, 0.844944);
-		ez_Mie(x, 0.75, &qsca, &g);
-		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez Mie]\n", x, qsca, 1.997908, g, 0.844944);
+		//ez_Mie(x, 0.75, qsca, g);
+		//printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez mie]\n", x, qsca, 1.997908, g, 0.844944);
 
 
 
@@ -711,15 +710,15 @@ void TestsFromPrahl()
 		printf("   x            Qs          Qs          g          g\n");
 		m = std::complex<double>(1.33, -0.00001);
 		x = 1.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.093923, g, 0.184517);
 
 		x = 100.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.096594, g, 0.868959);
 
 		x = 10000.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.723857, g, 0.907840);
 
 
@@ -730,23 +729,23 @@ void TestsFromPrahl()
 		m = std::complex<double>(1.5, -1.00);
 
 		x = 0.055;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000011, g, 0.000491);
 
 		x = 0.056;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000012, g, 0.000509);
 
 		x = 1.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.6634538, g, 0.192136);
 
 		x = 100.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.283697, g, 0.850252);
 
 		x = 10000.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.236574, g, 0.846310);
 
 
@@ -757,15 +756,15 @@ void TestsFromPrahl()
 		m = std::complex<double>(10.0, -10.00);
 
 		x = 1.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.049405, g, -0.110664);
 
 		x = 100.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.836785, g, 0.556215);
 
 		x = 10000.0;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.795393, g, 0.548194);
 
 
@@ -773,23 +772,23 @@ void TestsFromPrahl()
 		printf("\nPerfectly Conducting Spheres\n");
 		printf("               Calc.     Wiscombe     Calc     Wiscombe\n");
 		printf("   x            Qs          Qs          g          g\n");
-		m = std::complex<double>(0.0, 0.0);
+		m = std::complex<double>(std::numeric_limits<double>::infinity(), 0.0);
 		x = 0.099;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000321, g, -0.397357);
 
 		x = 0.101;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000348, g, -0.397262);
 
 		x = 100;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.008102, g, 0.500926);
-		ez_Mie(x, 0.0, &qsca, &g);
-		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez Mie]\n", x, qsca, 2.008102, g, 0.500926);
+		//ez_Mie(x, 0.0, qsca, g);
+		//printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez mie]\n", x, qsca, 2.008102, g, 0.500926);
 
 		x = 10000;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.000289, g, 0.500070);
 
 
@@ -797,34 +796,33 @@ void TestsFromPrahl()
 		printf("\n");
 	}
 
-
+	
 
 	{
 		double		    pi = 3.14159265358979;
 		long		    nangles = 7;
-		std::complex<double>* s1 = NULL;
-		std::complex<double>* s2 = NULL;
-		double* mu = NULL;
+		sci::GridData<std::complex<double>, 1> s1;
+		sci::GridData<std::complex<double>, 1> s2;
+		sci::GridData<double, 1> mu(nangles);
 		std::complex<double>    m;
 		double		    x;
 		double		    qext, qsca, qback, g;
-		char* form = "%7.4f %8.5f%+-8.5fi    %8.5f%+-8.5fi  Calc\n";
-		char* form2 = "%7.4f %8.5f%+-8.5fi    %8.5f%+-8.5fi   Wiscombe\n\n";
+		char form[] = "%7.4f %8.5f%+-8.5fi    %8.5f%+-8.5fi  Calc\n";
+		char form2[] = "%7.4f %8.5f%+-8.5fi    %8.5f%+-8.5fi   Wiscombe\n\n";
 		long		    i;
 
 		s1 = sci::GridData< std::complex<double>, 1>(nangles);
 		s2 = sci::GridData< std::complex<double>, 1>(nangles);
-		mu = new_darray(nangles);
 
 		for (i = 0; i < nangles; i++)
 			mu[i] = cos(pi * i / 6.0);
 
 		printf("\n***********************************************\n");
-		printf("Sixth Mie Test -- Wiscombe\n");
+		printf("Sixth mie Test -- Wiscombe\n");
 		printf("   angle       S1                    S2         \n");
 		x = 1.0;
 		m = std::complex<double>(1.5, -1.0);
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 
 		printf(form, mu[0], s1[0].real(), s1[0].imag(), s2[0].real(), s2[0].imag());
 		printf(form2, mu[0], 5.84080E-01, 1.90515E-01, 5.84080E-01, 1.90515E-01);
@@ -842,70 +840,67 @@ void TestsFromPrahl()
 		printf(form2, mu[6], 3.48844E-01, 1.46829E-01, -3.48844E-01, -1.46829E-01);
 
 		printf("\n");
-
-		free_carray(s1);
-		free_carray(s2);
-		free_darray(mu);
 	}
 
-
+	
 
 	{
 		long		    nangles = 0;
-		std::complex<double>* s1 = NULL;
-		std::complex<double>* s2 = NULL;
-		double* mu = NULL;
+		sci::GridData<std::complex<double>, 1> s1;
+		sci::GridData<std::complex<double>, 1> s2;
+		sci::GridData<double, 1> mu;
 		std::complex<double>    m;
 		double		    x = 20;
 		double		    qext, qsca, qback, g;
 
 		printf("\n***********************************************\n");
-		printf("Small Mie Test\n");
+		printf("Small mie Test\n");
 		printf("           calc    Wiscombe       calc   Wiscombe\n");
 		printf(" X         Qsca    Qsca            g         g\n");
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 0.099;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000007, g, 0.001448);
 		x = 0.101;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000008, g, 0.001507);
 
 		m = std::complex<double>(1.5, -1.0);
 		x = 0.055;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		printf("the following line does not agree with the Prahl\nor Wiscombe values for g.\nThe difference is because for this example I use\nthe more stable down recursion (due to stricter\ntests) and Prahl uses less stable up recursion.\nForcing Prahl to use down recursion gives\nmatching answers. Hence I am potentially correct.\n");
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.101491, g, 0.000491);
 		x = 0.056;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.103347, g, 0.000509);
 
 		m = std::complex<double>(1e-10, -1e10);
 		x = 0.099;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000321, g, -0.397357);
 		x = 0.101;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000348, g, -0.397262);
 
 		m = std::complex<double>(0.0, -1e10);
 		x = 0.099;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000321, g, -0.397357);
 		x = 0.101;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000348, g, -0.397262);
 
 		printf("\n");
 	}
 
-
+	
 
 	{
 		long		    nangles = 0;
-		std::complex<double>* s1 = NULL;
-		std::complex<double>* s2 = NULL;
-		double* mu = NULL;
+		sci::GridData<std::complex<double>, 1> s1;
+		sci::GridData<std::complex<double>, 1> s2;
+		sci::GridData<double, 1> mu;
 		std::complex<double>    m;
 		double		    x, qext, qsca, qback, g, ref;
 
@@ -917,73 +912,73 @@ void TestsFromPrahl()
 		m = std::complex<double>(1.55, 0.0);
 		x = 2 * 3.1415926535 * 0.525 / 0.6328;
 		ref = 2.92534;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8g\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 		m = std::complex<double>(0.0, -1000.0);
 		x = 0.099;
 		ref = (4.77373E-07 * 4.77373E-07 + 1.45416E-03 * 1.45416E-03) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.2f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 0.101;
 		ref = (5.37209E-07 * 5.37209E-07 + 1.54399E-03 * 1.54399E-03) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.2f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 100;
 		ref = (4.35251E+01 * 4.35251E+01 + 2.45587E+01 * 2.45587E+01) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.2f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 0.099;
 		ref = (1.81756E-08 * 1.81756E-08 + 1.64810E-04 * 1.64810E-04) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 0.101;
 		ref = (2.04875E-08 * 2.04875E-08 + 1.74965E-04 * 1.74965E-04) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 10.0;
 		ref = (1.07857E+00 * 1.07857E+00 + 3.60881E-02 * 3.60881E-02) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 1000.0;
 		ref = (1.70578E+01 * 1.70578E+01 + 4.84251E+02 * 4.84251E+02) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 		m = std::complex<double>(1.33, -0.00001);
 		x = 1.0;
 		ref = (2.24362E-02 * 2.24362E-02 + 1.43711E-01 * 1.43711E-01) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 100.0;
 		ref = (5.65921E+01 * 5.65921E+01 + 4.65097E+01 * 4.65097E+01) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 		m = std::complex<double>(1.5, -1.0);
 		x = 0.055;
 		ref = (7.66140E-05 * 7.66140E-05 + 8.33814E-05 * 8.33814E-05) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 0.056;
 		ref = (8.08721E-05 * 8.08721E-05 + 8.80098E-05 * 8.80098E-05) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 1.0;
 		ref = (3.48844E-01 * 3.48844E-01 + 1.46829E-01 * 1.46829E-01) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 100.0;
 		ref = (2.02936E+01 * 2.02936E+01 + 4.38444E+00 * 4.38444E+00) / x / x * 4;
-		Mie(x, m, mu, nangles, s1, s2, &qext, &qsca, &qback, &g);
+		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 
 		printf("\n");
 	}
-	*/
+	
 
 }
 

@@ -185,6 +185,45 @@ sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPL
         return getLogarithmicDerivativesForward(z, N);
 }
 
+template<class FLT, class COMPLEX, class RI>
+void rayleigh(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
+    sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2,
+    FLT& extinctionEfficiency, FLT& scatteringEfficiency,
+    FLT& backscatterEfficiency, FLT& asymmetryParameter)
+{
+    using MAYBECOMPLEX = decltype(refractiveIndex);
+    auto refractiveIndexSquared = refractiveIndex * refractiveIndex;
+    FLT xSquared = x * x;
+
+    FLT aHat2Top = FLT(1) - (FLT(1) / FLT(14)) * xSquared;
+    MAYBECOMPLEX aHat2Bottom = FLT(2) * refractiveIndexSquared + FLT(3) - (FLT(2) * refractiveIndexSquared - FLT(7)) / FLT(14) * xSquared;
+    COMPLEX aHat2 = COMPLEX(0.0, 1.0) * (xSquared * (refractiveIndexSquared - FLT(1.0)) / FLT(15.0) * aHat2Top / aHat2Bottom);
+
+    MAYBECOMPLEX bHat1Top = FLT(1) + (FLT(2) * refractiveIndexSquared - FLT(5)) / FLT(70) * xSquared;
+    MAYBECOMPLEX bHat1Bottom = FLT(1) - (FLT(2) * refractiveIndexSquared - FLT(5)) / FLT(30) * xSquared;
+    COMPLEX bHat1 = COMPLEX(0.0, 1.0) * (xSquared * (refractiveIndexSquared - FLT(1)) / FLT(45) * bHat1Top / bHat1Bottom);
+
+    COMPLEX D = refractiveIndexSquared + FLT(2) + (FLT(1) - FLT(7) / FLT(10) * refractiveIndexSquared) * xSquared
+        - (FLT(8) * refractiveIndexSquared * refractiveIndexSquared - FLT(385) * refractiveIndexSquared + FLT(350)) / FLT(1400) * xSquared * xSquared
+        + COMPLEX(0.0, 1.0) * (FLT(2) * (refractiveIndexSquared - FLT(1)) / FLT(3) * x * xSquared * (FLT(1) - xSquared / FLT(10)));
+    
+    MAYBECOMPLEX aHat1Top = FLT(1) - xSquared / FLT(10) + (FLT(4) * refractiveIndexSquared + FLT(5)) / FLT(1400) * xSquared * xSquared;
+    COMPLEX aHat1 = COMPLEX(0.0, 1.0) * (FLT(2) * (refractiveIndexSquared - FLT(1)) * aHat1Top / (FLT(3) * D));
+
+    FLT T = std::norm(aHat1) + std::norm(bHat1) + (FLT(5) / FLT(3)) * std::norm(aHat2);
+
+    s1 = FLT(1.5) * x * xSquared * (aHat1 + (bHat1 + (FLT(5) / FLT(3)) * aHat2) * mus);
+    s2 = FLT(1.5) * x * xSquared * (bHat1 + (bHat1 + aHat1 * mus + (FLT(5) / FLT(3)) * aHat2) * (FLT(2) * mus - FLT(1)));
+
+    asymmetryParameter = std::real(aHat1 * std::conj(aHat2 + bHat1)) / T;
+
+    scatteringEfficiency = FLT(6) * xSquared * xSquared * T;
+    extinctionEfficiency = FLT(6) * x * std::real(aHat1 + bHat1 + (FLT(5) / FLT(3)) * aHat2);
+
+    COMPLEX ss1 = 1.5 * xSquared * (aHat1 - bHat1 - (FLT(5.0) / FLT(3.0)) * aHat2);
+    backscatterEfficiency = FLT(4) * std::norm(ss1);
+}
+
 //Set the template argument LARGE_RI to false for intermediate values of RI and true
 //for large values of RI. When set to true the calculation uses maths that is stable
 //as RI -> infinity (conducting sphere). When set to false the calculation uses maths
@@ -196,6 +235,12 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     FLT& backscatterEfficiency, FLT& asymmetryParameter)
 {
     using MAYBECOMPLEX = decltype(refractiveIndex);
+
+    if (std::norm(refractiveIndex) * x * x < 0.01)
+    {
+        rayleigh(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter);
+        return;
+    }
 
     auto z = x * refractiveIndex;
     size_t N = nTerms(x);
