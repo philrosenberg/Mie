@@ -261,13 +261,15 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     //Declare all the variables needed for the sums
     //and assign them using the values from the n=1 term
     //**************************************************
+    auto reciprocalRefractiveIndex = FLT(1.0) / refractiveIndex;
+    auto reciprocalX = FLT(1.0) / x;
 
     //These variables are needed for working out the overall scatering parameters
     FLT psiPrev = std::sin(x);
-    FLT psi = std::sin(x) / x - std::cos(x);
+    FLT psi = std::sin(x) * reciprocalX - std::cos(x);
     FLT psiNext(0); //this isn't used until it is defined in the loop
     COMPLEX xiPrev = psiPrev + COMPLEX(FLT(0), std::cos(x));
-    COMPLEX xi = psi + COMPLEX(FLT(0), (std::cos(x) / x + std::sin(x)));
+    COMPLEX xi = psi + COMPLEX(FLT(0), (std::cos(x) * reciprocalX + std::sin(x)));
     COMPLEX xiNext(FLT(0)); //this isn't used until it is defined in the loop
     FLT sign(-1);
 
@@ -286,16 +288,15 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     sci::GridData<FLT, 1>  eigenTau(mus);
     sci::GridData<FLT, 1>  eigenPiNext = FLT(3) * mus;
 
-    auto reciprocalRefractiveIndex = FLT(1.0) / refractiveIndex;
     //a and b are used for both angular resolved and overall scattering properties
     // A will alsways have a size of at least 2, so this is safe
     //calculate the first a and b terms from the values above
     //Note that the summing over a and b starts with index 1
     //and the prev suffixed variables above have index 0
-    MAYBECOMPLEX aFirstTerm = A[1] * reciprocalRefractiveIndex + FLT(1) / x;
+    MAYBECOMPLEX aFirstTerm = A[1] * reciprocalRefractiveIndex + FLT(1) * reciprocalX;
     COMPLEX a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
     //this formulation is more stable when using large refractive indices
-    MAYBECOMPLEX bFirstTerm = A[1] + FLT(1) * reciprocalRefractiveIndex / x;
+    MAYBECOMPLEX bFirstTerm = A[1] + FLT(1) * reciprocalRefractiveIndex * reciprocalX;
     COMPLEX b = (bFirstTerm * psi - psiPrev * reciprocalRefractiveIndex) / (bFirstTerm * xi - xiPrev * reciprocalRefractiveIndex);
     
 
@@ -318,9 +319,9 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     for (size_t i = 2; i < N; ++i)
     {
         //MieFlt n = MieFlt(i + 1);
-        psiNext = commonFactor * psi / x - psiPrev;
+        psiNext = commonFactor * psi * reciprocalX - psiPrev;
         //psiNext = xiNext.real();
-        xiNext = commonFactor * xi / x - xiPrev;
+        xiNext = commonFactor * xi * reciprocalX - xiPrev;
         //shuffle the next to current and current to next. This is more efficient if we use swap as it avoids assignments
         std::swap(psiPrev, psi);
         std::swap(psi, psiNext);
@@ -338,11 +339,11 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
         COMPLEX aPrev = a;
         COMPLEX bPrev = b;
         sign = sign * FLT(-1);
-        aFirstTerm = A[i] * reciprocalRefractiveIndex + FLT(i) / x;
+        aFirstTerm = A[i] * reciprocalRefractiveIndex + FLT(i) * reciprocalX;
         a = (aFirstTerm * psi - psiPrev) / (aFirstTerm * xi - xiPrev);
         
         //this formulation is more stable when using large refractive indices
-        bFirstTerm = A[i] + FLT(i) * reciprocalRefractiveIndex / x;
+        bFirstTerm = A[i] + FLT(i) * reciprocalRefractiveIndex * reciprocalX;
         b = (bFirstTerm * psi - psiPrev * reciprocalRefractiveIndex) / (bFirstTerm * xi - xiPrev * reciprocalRefractiveIndex);
         
 

@@ -982,6 +982,77 @@ void TestsFromPrahl()
 
 }
 
+void speedTest()
+{
+	srand((unsigned int)time(NULL));
+
+	sci::GridData<std::complex<double>, 1> s1;
+	sci::GridData<std::complex<double>, 1> s2;
+	sci::GridData<double, 1> mus;
+	std::complex<double>    refractiveIndex(1.5, 0.00001);
+	double x;
+	double extinctionEfficiency;
+	double scatteringEfficiency;
+	double backscatterEfficiency;
+	double asymmetryParameter;
+
+	double extinctionEfficiencyMean = 0.0;
+	double scatteringEfficiencyMean = 0.0;
+	double backscatterEfficiencyMean = 0.0;
+	double asymmetryParameterMean = 0.0;
+
+	size_t n = 100000;
+	auto start = clock();
+	for (size_t i = 0; i < n; ++i)
+	{
+		x = double(rand()) / double(RAND_MAX) + 1.0;
+		mie(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter);
+		extinctionEfficiencyMean += extinctionEfficiency;
+		scatteringEfficiencyMean += scatteringEfficiency;
+		backscatterEfficiencyMean += backscatterEfficiency;
+		asymmetryParameterMean += asymmetryParameter;
+	}
+	auto end = clock();
+	std::cout << "Doing " << n << " Mie calculations with x between 1 and 2 took " << double(end - start) / double(CLOCKS_PER_SEC) << " s\n";
+
+	extinctionEfficiencyMean = 0.0;
+	scatteringEfficiencyMean = 0.0;
+	backscatterEfficiencyMean = 0.0;
+	asymmetryParameterMean = 0.0;
+
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+	{
+		x = 9.0 * double(rand()) / double(RAND_MAX) + 1.0;
+		mie(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter);
+		extinctionEfficiencyMean += extinctionEfficiency;
+		scatteringEfficiencyMean += scatteringEfficiency;
+		backscatterEfficiencyMean += backscatterEfficiency;
+		asymmetryParameterMean += asymmetryParameter;
+	}
+	end = clock();
+	std::cout << "Doing " << n << " Mie calculations with x between 1 and 10 took " << double(end - start) / double(CLOCKS_PER_SEC) << " s\n";
+
+	extinctionEfficiencyMean = 0.0;
+	scatteringEfficiencyMean = 0.0;
+	backscatterEfficiencyMean = 0.0;
+	asymmetryParameterMean = 0.0;
+
+	start = clock();
+	for (size_t i = 0; i < n; ++i)
+	{
+		x = 90.0 * double(rand()) / double(RAND_MAX) + 1.0;
+		mie(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter);
+		extinctionEfficiencyMean += extinctionEfficiency;
+		scatteringEfficiencyMean += scatteringEfficiency;
+		backscatterEfficiencyMean += backscatterEfficiency;
+		asymmetryParameterMean += asymmetryParameter;
+	}
+	end = clock();
+	std::cout << "Doing " << n << " Mie calculations with x between 1 and 100 took " << double(end - start) / double(CLOCKS_PER_SEC) << " s\n";
+
+}
+
 int main()
 {
     constexpr double testBessel = getBesselMinusHalfOverPlusHalfRatio<double>(1.0, 9, 0.0); //test, check it matches with the Lentz paper
@@ -999,4 +1070,5 @@ int main()
 
     testLogarithmicDerivatives();
 
+	speedTest();
 }
