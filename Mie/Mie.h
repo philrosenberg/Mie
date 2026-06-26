@@ -307,13 +307,14 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     scatteringEfficiency = (commonFactor * (std::norm(a) + std::norm(b)));
     asymmetryParameter = commonFactor / FLT(2) * innerProduct(a, b); //note first term is 0 for n=1
     COMPLEX backscatterTemp = -commonFactor * (a - b);
-
+    
     sci::GridData<COMPLEX, 1> sPlus = FLT(1.5) * (a + b) * (eigenPi + eigenTau);
     sci::GridData<COMPLEX, 1> sMinus = FLT(1.5) * (a - b) * (eigenPi - eigenTau);
 
     //s and t are intermediate calculations for calculating eigenPi and eigenTau
     sci::GridData<FLT, 1> s(mus.size());
     sci::GridData<FLT, 1> t(mus.size());
+
 
     //loop through each of the remaining sum terms
     for (size_t i = 2; i < N; ++i)
@@ -323,6 +324,7 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
         //psiNext = xiNext.real();
         xiNext = commonFactor * xi * reciprocalX - xiPrev;
         //shuffle the next to current and current to next. This is more efficient if we use swap as it avoids assignments
+        
         std::swap(psiPrev, psi);
         std::swap(psi, psiNext);
         std::swap(xiPrev, xi);
@@ -354,7 +356,7 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
         asymmetryParameter += (FLT(i * i) - FLT(1.0)) / FLT(i) * (innerProduct(aPrev, a) + innerProduct(bPrev, b))
             + commonFactor / (FLT(i) * FLT(i + 1)) * innerProduct(a, b);
         backscatterTemp += sign * commonFactor * (a - b);
-
+        
         sPlus += FLT(2 * i + 1) / FLT(i * (i + 1)) * (a + b) * (eigenPi + eigenTau);
         sMinus += FLT(2 * i + 1) / FLT(i * (i + 1)) * (a - b) * (eigenPi - eigenTau);
         //The variables below were just for debugging
@@ -367,6 +369,8 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     scatteringEfficiency *= FLT(2) * invXSquared;
     asymmetryParameter *= FLT(4) / scatteringEfficiency * invXSquared;
     backscatterEfficiency = std::norm(backscatterTemp) * invXSquared;
+    
     s1 = (sPlus + sMinus) / FLT(2);
     s2 = (sPlus - sMinus) / FLT(2);
+    
 }

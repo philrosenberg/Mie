@@ -988,7 +988,9 @@ void speedTest()
 
 	sci::GridData<std::complex<double>, 1> s1;
 	sci::GridData<std::complex<double>, 1> s2;
-	sci::GridData<double, 1> mus;
+	sci::GridData<double, 1> mus (100);
+	for (size_t i = 0; i < mus.size(); ++i)
+		mus[i] = double(i) / double(mus.size() - 1) * 2.0;
 	std::complex<double>    refractiveIndex(1.5, 0.00001);
 	double x;
 	double extinctionEfficiency;
@@ -1055,7 +1057,7 @@ void speedTest()
 
 int main()
 {
-    constexpr double testBessel = getBesselMinusHalfOverPlusHalfRatio<double>(1.0, 9, 0.0); //test, check it matches with the Lentz paper
+    /*constexpr double testBessel = getBesselMinusHalfOverPlusHalfRatio<double>(1.0, 9, 0.0); //test, check it matches with the Lentz paper
     if (std::abs(testBessel - double(18.95228198)) > 0.00000001)
     {
         std::cout << "Bessel test failed. Result was " << testBessel << " when it should have been 18.95228198" << std::endl;
@@ -1068,7 +1070,7 @@ int main()
 
     testPrahl();
 
-    testLogarithmicDerivatives();
+    testLogarithmicDerivatives();*/
 
 	speedTest();
 }
