@@ -1,4 +1,9 @@
 #pragma once
+
+//Copyright 2026 Philip Rosenberg
+//p.d.rosenberg@gmail.com
+
+
 #include<complex>
 
 //https://github.com/philrosenberg/sci
