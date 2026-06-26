@@ -4,6 +4,7 @@
 //https://github.com/philrosenberg/sci
 //elementwise maths on arrays
 #include<scieng/grid.h>
+#include<scieng/gridview.h>
 #include<scieng/gridtransformview.h>
 
 //maths constants
@@ -30,7 +31,7 @@ inline constexpr auto innerProduct(T v1, T v2)
 }
 
 template<class FLT>
-constexpr size_t nTerms(FLT x)
+inline constexpr size_t nTerms(FLT x)
 {
     //to match prahl
     return size_t(x + FLT(4.05) * std::pow(x, FLT(1.0) / FLT(3.0))) + size_t(2);
@@ -47,7 +48,7 @@ constexpr size_t nTerms(FLT x)
 }
 
 template<class FLT>
-constexpr inline bool continueTest(FLT ratio, FLT accuracySquared)
+inline constexpr bool continueTest(FLT ratio, FLT accuracySquared)
 {
     FLT diffFromUnity = ratio - FLT(1);
     return diffFromUnity * diffFromUnity > accuracySquared;
@@ -55,14 +56,14 @@ constexpr inline bool continueTest(FLT ratio, FLT accuracySquared)
 
 
 template<class FLT>
-constexpr inline bool continueTest(std::complex<FLT> ratio, FLT accuracySquared)
+inline constexpr bool continueTest(std::complex<FLT> ratio, FLT accuracySquared)
 {
     std::complex<FLT> diffFromUnitySquared = std::norm(ratio) - FLT(1);
     return std::abs(diffFromUnitySquared) > accuracySquared;
 }
 
 template<class MAYBECOMPLEX, class ACC>
-constexpr MAYBECOMPLEX getBesselMinusHalfOverPlusHalfRatio(MAYBECOMPLEX xInverse, size_t order, ACC accuracy)
+inline constexpr MAYBECOMPLEX getBesselMinusHalfOverPlusHalfRatio(MAYBECOMPLEX xInverse, size_t order, ACC accuracy)
 {
     //From Lentz(1976) Applied Optics Vol 15, Issue 3,pp. 668-671 Generating Bessel functions in Mie scattering calculations using continued fractions
     //
@@ -107,14 +108,14 @@ constexpr MAYBECOMPLEX getBesselMinusHalfOverPlusHalfRatio(MAYBECOMPLEX xInverse
 }
 
 template<class MAYBECOMPLEX, class FLT>
-constexpr MAYBECOMPLEX getLogarithmicDerivative(MAYBECOMPLEX x, size_t n, FLT accuracy)
+inline constexpr MAYBECOMPLEX getLogarithmicDerivative(MAYBECOMPLEX x, size_t n, FLT accuracy)
 {
     return -MAYBECOMPLEX(static_cast<FLT>(n)) / x + getBesselMinusHalfOverPlusHalfRatio(FLT(1) / x, n, accuracy);
 }
 
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
 template<class COMPLEX>
-sci::GridData<COMPLEX, 1> getLogarithmicDerivativesForward(COMPLEX z, size_t N)
+inline sci::GridData<COMPLEX, 1> getLogarithmicDerivativesForward(COMPLEX z, size_t N)
     requires (IsComplex<COMPLEX>)
 {
     sci::GridData<COMPLEX, 1>A(N);
@@ -130,7 +131,7 @@ sci::GridData<COMPLEX, 1> getLogarithmicDerivativesForward(COMPLEX z, size_t N)
 }
 
 template<class FLT>
-sci::GridData<FLT, 1> getLogarithmicDerivativesForward(FLT z, size_t N)
+inline sci::GridData<FLT, 1> getLogarithmicDerivativesForward(FLT z, size_t N)
     requires (!IsComplex<FLT>)
 {
     sci::GridData<FLT, 1>A(N);
@@ -145,7 +146,7 @@ sci::GridData<FLT, 1> getLogarithmicDerivativesForward(FLT z, size_t N)
 
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
 template<class MAYBECOMPLEX>
-sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesBackward(MAYBECOMPLEX z, size_t N)
+inline sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesBackward(MAYBECOMPLEX z, size_t N)
 {
     sci::GridData<MAYBECOMPLEX, 1>A(N);
     using FLT = decltype(std::real(z));
@@ -162,7 +163,7 @@ sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesBackward(MAYBECOMPLEX z,
 
 
 template<class MAYBECOMPLEX, class FLT>
-sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPLEX refractiveIndex, FLT x, size_t N)
+inline sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPLEX refractiveIndex, FLT x, size_t N)
 {
     //calculate A. In some situations this can be done with forward recursion which
     //is faster, If not, then we calculate the last A using the Lentz method and then
@@ -186,7 +187,7 @@ sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPL
 }
 
 template<class FLT, class COMPLEX, class RI>
-void rayleigh(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
+inline void rayleigh(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2,
     FLT& extinctionEfficiency, FLT& scatteringEfficiency,
     FLT& backscatterEfficiency, FLT& asymmetryParameter)
@@ -224,17 +225,88 @@ void rayleigh(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     backscatterEfficiency = FLT(4) * std::norm(ss1);
 }
 
-//Set the template argument LARGE_RI to false for intermediate values of RI and true
-//for large values of RI. When set to true the calculation uses maths that is stable
-//as RI -> infinity (conducting sphere). When set to false the calculation uses maths
-//that is faster
-template<class FLT, class COMPLEX, class RI>
-void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
+class PreAllocator
+{
+public:
+    PreAllocator(size_t nBytes)
+        :m_currentByte(0), m_data(nBytes)
+    {
+    }
+    template<class T>
+    std::span<T> getSpan(size_t nElements)
+    {
+        T* start = (T*)&m_data[m_currentByte];
+        //get a length in Bytes that is an integer number of the size of a pointer
+        size_t lengthBytes = (nElements * sizeof(T) / sizeof(void*) + 1) *sizeof(void*);
+        if (m_currentByte + lengthBytes > m_data.size())
+            throw(std::bad_alloc());
+        m_currentByte += lengthBytes;
+        return std::span<T>(start, nElements);
+    }
+    template<class T>
+    std::span<T> getSpan(size_t nElements, const T& value)
+    {
+        std::span<T> result = getSpan<T>(nElements);
+        for (T& r : result)
+            r = value;
+        return result;
+    }
+    template<class T, class RANGE>
+    std::span<T> getSpan(const RANGE& range)
+    {
+        size_t nElements = std::size(range);
+        std::span<T> result = getSpan<T>(nElements);
+        auto dest = result.begin();
+        auto src = std::begin(range);
+        for (; dest != result.end(); ++dest, ++src)
+            *dest = *src;
+        return result;
+    }
+    void clear()
+    {
+        m_currentByte = 0;
+    }
+    bool isClear() const
+    {
+        return m_currentByte == 0;
+    }
+private:
+    std::vector<char> m_data;
+    size_t m_currentByte;
+};
+
+template<class FLT, class COMPLEX>
+class MiePreAllocator : public PreAllocator
+{
+public:
+    MiePreAllocator(size_t nAngles)
+        :PreAllocator((nAngles + sizeof(void*))* (6 * sizeof(FLT) + 2 * sizeof(COMPLEX)))
+    {
+    }
+};
+
+template<class FLT, class COMPLEX, class MAYBECOMPLEX>
+inline void mie(FLT x, MAYBECOMPLEX refractiveIndex, const sci::GridData<FLT, 1>& mus,
     sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2,
     FLT& extinctionEfficiency, FLT& scatteringEfficiency,
     FLT& backscatterEfficiency, FLT& asymmetryParameter)
 {
-    using MAYBECOMPLEX = decltype(refractiveIndex);
+    MiePreAllocator<FLT, COMPLEX> preAllocator(mus.size());
+    mie(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter, preAllocator);
+}
+
+
+template<class FLT, class COMPLEX, class MAYBECOMPLEX>
+inline void mie(FLT x, MAYBECOMPLEX refractiveIndex, const sci::GridData<FLT, 1>& mus,
+    sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2,
+    FLT& extinctionEfficiency, FLT& scatteringEfficiency,
+    FLT& backscatterEfficiency, FLT& asymmetryParameter,
+    PreAllocator &preAllocator)
+{
+    if (!preAllocator.isClear())
+    {
+        throw(std::bad_alloc());
+    }
 
     if (std::norm(refractiveIndex) * x * x < 0.01)
     {
@@ -244,9 +316,9 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
 
     auto z = x * refractiveIndex;
     size_t N = nTerms(x);
-    //sci::GridData<MieFlt, 1> mus{ 1.0, -0.5, -0.5 };//cosines of scattering angle
     if (N < 2)
         throw("Failure in Mie code - the number of terms needed was less than 2. Did you pass in negative sizes or something?");
+
 
     //logarithmic derivative, called A in Wiscombe or D in Bohren anf Huffman
     //In some circumstances it is stable to calculate this forward, but some 
@@ -262,18 +334,21 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     //and assign them using the values from the n=1 term
     //**************************************************
     auto reciprocalRefractiveIndex = FLT(1.0) / refractiveIndex;
-    auto reciprocalX = FLT(1.0) / x;
+    FLT reciprocalX = FLT(1.0) / x;
+    FLT sinX = std::sin(x);
+    FLT cosX = std::cos(x);
+    const long nAngles = (long)mus.size();
 
     //These variables are needed for working out the overall scatering parameters
-    FLT psiPrev = std::sin(x);
-    FLT psi = std::sin(x) * reciprocalX - std::cos(x);
+    FLT psiPrev = sinX;
+    FLT psi = sinX * reciprocalX - cosX;
     FLT psiNext(0); //this isn't used until it is defined in the loop
-    COMPLEX xiPrev = psiPrev + COMPLEX(FLT(0), std::cos(x));
-    COMPLEX xi = psi + COMPLEX(FLT(0), (std::cos(x) * reciprocalX + std::sin(x)));
+    COMPLEX xiPrev = psiPrev + COMPLEX(FLT(0), cosX);
+    COMPLEX xi = psi + COMPLEX(FLT(0), (cosX * reciprocalX + sinX));
     COMPLEX xiNext(FLT(0)); //this isn't used until it is defined in the loop
-    FLT sign(-1);
+    FLT sign(-1.0);
 
-
+    
     //These variables are needed for the angular resolved scallering
     //
     // eigenPi = 1 for all angles and eigenPiPrev = 0 for all angles
@@ -283,11 +358,22 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     // eigenTau = mus
     // eigenPiNext = 3*mus
     //eigenTauPrev = MieFlt(0.0);
-    sci::GridData<FLT, 1>  eigenPiPrev(mus.size(), FLT(0.0));
-    sci::GridData<FLT, 1>  eigenPi(mus.size(), FLT(1.0));
-    sci::GridData<FLT, 1>  eigenTau(mus);
-    sci::GridData<FLT, 1>  eigenPiNext = FLT(3) * mus;
-
+    auto  eigenPiPrev = sci::views::make_grid_view_1d(preAllocator.getSpan<FLT>(mus.size(), FLT(0.0)));
+    auto  eigenPi = sci::views::make_grid_view_1d(preAllocator.getSpan<FLT>(mus.size(), FLT(1.0)));
+    auto  eigenTau = sci::views::make_grid_view_1d(preAllocator.getSpan<FLT>(mus));
+    auto  eigenPiNext = sci::views::make_grid_view_1d(preAllocator.getSpan<FLT>(FLT(3) * mus));
+    //sci::GridData<FLT, 1>  eigenPiPrev(mus.size(), FLT(0.0));
+    //sci::GridData<FLT, 1>  eigenPi(mus.size(), FLT(1.0));
+    //sci::GridData<FLT, 1>  eigenTau(mus);
+    //sci::GridData<FLT, 1>  eigenPiNext = FLT(3) * mus;
+    static_assert (sci::IsGrid<decltype(eigenPi)>);
+    
+    auto  sPlus = sci::views::make_grid_view_1d(preAllocator.getSpan<COMPLEX>(mus.size()));
+    auto  sMinus = sci::views::make_grid_view_1d(preAllocator.getSpan<COMPLEX>(mus.size()));
+    //sci::GridData<COMPLEX, 1> sPlus(mus.size());
+    //sci::GridData<COMPLEX, 1> sMinus(mus.size());
+    
+    
     //a and b are used for both angular resolved and overall scattering properties
     // A will alsways have a size of at least 2, so this is safe
     //calculate the first a and b terms from the values above
@@ -300,43 +386,44 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
     COMPLEX b = (bFirstTerm * psi - psiPrev * reciprocalRefractiveIndex) / (bFirstTerm * xi - xiPrev * reciprocalRefractiveIndex);
     
 
-
+    
+    
     //These are the values we will be summing
     FLT commonFactor(3);
     extinctionEfficiency = (commonFactor * (a.real() + b.real()));
     scatteringEfficiency = (commonFactor * (std::norm(a) + std::norm(b)));
     asymmetryParameter = commonFactor / FLT(2) * innerProduct(a, b); //note first term is 0 for n=1
     COMPLEX backscatterTemp = -commonFactor * (a - b);
-    
-    sci::GridData<COMPLEX, 1> sPlus = FLT(1.5) * (a + b) * (eigenPi + eigenTau);
-    sci::GridData<COMPLEX, 1> sMinus = FLT(1.5) * (a - b) * (eigenPi - eigenTau);
-
-    //s and t are intermediate calculations for calculating eigenPi and eigenTau
-    sci::GridData<FLT, 1> s(mus.size());
-    sci::GridData<FLT, 1> t(mus.size());
-
+    for (size_t i = 0; i < mus.size(); ++i)
+    {
+        sPlus[i] = FLT(1.5) * (a + b) * (eigenPi[i] + eigenTau[i]);
+        sMinus[i] = FLT(1.5) * (a - b) * (eigenPi[i] - eigenTau[i]);
+    }
 
     //loop through each of the remaining sum terms
     for (size_t i = 2; i < N; ++i)
     {
-        //MieFlt n = MieFlt(i + 1);
         psiNext = commonFactor * psi * reciprocalX - psiPrev;
         //psiNext = xiNext.real();
         xiNext = commonFactor * xi * reciprocalX - xiPrev;
         //shuffle the next to current and current to next. This is more efficient if we use swap as it avoids assignments
         
-        std::swap(psiPrev, psi);
-        std::swap(psi, psiNext);
-        std::swap(xiPrev, xi);
-        std::swap(xi, xiNext);
-
-        std::swap(eigenPiPrev, eigenPi);
-        std::swap(eigenPi, eigenPiNext);
-        s = mus * eigenPi;
-        t = s - eigenPiPrev;
-        eigenPiNext = s + t * FLT(i + 1) / FLT(i);
-        eigenTau = FLT(i) * t - eigenPiPrev;
-
+        psiPrev = psi;
+        psi = psiNext;
+        xiPrev = xi;
+        xi = xiNext;
+        decltype(eigenPiPrev) eigenPiTemp(eigenPiPrev);
+        eigenPiPrev.retarget(eigenPi);
+        eigenPi.retarget(eigenPiNext);
+        eigenPiNext.retarget(eigenPiTemp);
+        for (long j = 0; j < nAngles; ++j)
+        {
+            auto s = mus[j] * eigenPi[j];
+            auto t = s - eigenPiPrev[j];
+            eigenPiNext[j] = s + t * FLT(i + 1) / FLT(i);
+            eigenTau[j] = FLT(i) * t - eigenPiPrev[j];
+        }
+        
         //calculate new a and b
         COMPLEX aPrev = a;
         COMPLEX bPrev = b;
@@ -348,7 +435,7 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
         bFirstTerm = A[i] + FLT(i) * reciprocalRefractiveIndex * reciprocalX;
         b = (bFirstTerm * psi - psiPrev * reciprocalRefractiveIndex) / (bFirstTerm * xi - xiPrev * reciprocalRefractiveIndex);
         
-
+        
         commonFactor = (FLT(2) * i + FLT(1));
 
         extinctionEfficiency += commonFactor * (a.real() + b.real());
@@ -357,20 +444,28 @@ void mie(FLT x, RI refractiveIndex, const sci::GridData<FLT, 1>& mus,
             + commonFactor / (FLT(i) * FLT(i + 1)) * innerProduct(a, b);
         backscatterTemp += sign * commonFactor * (a - b);
         
-        sPlus += FLT(2 * i + 1) / FLT(i * (i + 1)) * (a + b) * (eigenPi + eigenTau);
-        sMinus += FLT(2 * i + 1) / FLT(i * (i + 1)) * (a - b) * (eigenPi - eigenTau);
+        for (long j = 0; j < nAngles; ++j)
+        {
+            sPlus[j] += FLT(2 * i + 1) / FLT(i * (i + 1)) * (a + b) * (eigenPi[j] + eigenTau[j]);
+            sMinus[j] += FLT(2 * i + 1) / FLT(i * (i + 1)) * (a - b) * (eigenPi[j] - eigenTau[j]);
+        }
         //The variables below were just for debugging
         //sci::GridData<MieComplex, 1> s1 = (sPlus + sMinus) / MieFlt(2);
         //sci::GridData<MieComplex, 1> s2 = (sPlus - sMinus) / MieFlt(2);
     }
-
+    
     FLT invXSquared = FLT(1) / (x * x);
     extinctionEfficiency *= FLT(2) * invXSquared;
     scatteringEfficiency *= FLT(2) * invXSquared;
     asymmetryParameter *= FLT(4) / scatteringEfficiency * invXSquared;
     backscatterEfficiency = std::norm(backscatterTemp) * invXSquared;
+    s1.resize(mus.size());
+    s2.resize(mus.size());
+    for (long i = 0; i < nAngles; ++i)
+    {
+        s1[i] = (sPlus[i] + sMinus[i]) / FLT(2);
+        s2[i] = (sPlus[i] - sMinus[i]) / FLT(2);
+    }
     
-    s1 = (sPlus + sMinus) / FLT(2);
-    s2 = (sPlus - sMinus) / FLT(2);
-    
+    preAllocator.clear();
 }
