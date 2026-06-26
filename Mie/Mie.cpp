@@ -15,11 +15,15 @@ bool testLogarithmicDerivatives()
 {
     std::complex<double> z(8.0798703484513279);
     size_t N(14);
-    auto testForward = getLogarithmicDerivativesForward(z, N);
-    auto testBackward = getLogarithmicDerivativesBackward(z, N);
+	sci::GridData<std::complex<double>, 1> testForward(N);
+	sci::GridData<std::complex<double>, 1> testBackward(N);
+    getLogarithmicDerivativesForward(z, N, testForward);
+    getLogarithmicDerivativesBackward(z, N, testBackward);
 
-    auto testForward2 = getLogarithmicDerivativesForward(50.0 * 4.0 / 3.0, 66);
-    auto testBackward2 = getLogarithmicDerivativesBackward(50.0 * 4.0 / 3.0, 66);
+	sci::GridData<std::complex<double>, 1> testForward2(66);
+	sci::GridData<std::complex<double>, 1> testBackward2(66);
+    getLogarithmicDerivativesForward(50.0 * 4.0 / 3.0, 66, testForward2);
+    getLogarithmicDerivativesBackward(50.0 * 4.0 / 3.0, 66, testBackward2);
     return true;
 }
 
@@ -98,12 +102,12 @@ std::complex<double> Lentz_Dn(std::complex<double> z, long n)
 
 void Dn_up(std::complex<double> z, long n, sci::GridData< std::complex<double>, 1>& D)
 {
-	D = getLogarithmicDerivativesForward(z, n);
+	getLogarithmicDerivativesForward(z, n, D);
 }
 
 void Dn_down(std::complex<double> z, long n, sci::GridData< std::complex<double>, 1>& D)
 {
-	D = getLogarithmicDerivativesBackward(z, n);
+	getLogarithmicDerivativesBackward(z, n, D);
 }
 
 double
@@ -991,7 +995,7 @@ void speedTest()
 	sci::GridData<double, 1> mus (100);
 	for (size_t i = 0; i < mus.size(); ++i)
 		mus[i] = double(i) / double(mus.size() - 1) * 2.0;
-	MiePreAllocator<double, std::complex<double>> preAllocator(mus.size());
+	MiePreAllocator<double, std::complex<double>> preAllocator(mus.size(), 1000);
 	std::complex<double>    refractiveIndex(1.5, 0.00001);
 	double x;
 	double extinctionEfficiency;

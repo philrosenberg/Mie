@@ -114,11 +114,10 @@ inline constexpr MAYBECOMPLEX getLogarithmicDerivative(MAYBECOMPLEX x, size_t n,
 }
 
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
-template<class COMPLEX>
-inline sci::GridData<COMPLEX, 1> getLogarithmicDerivativesForward(COMPLEX z, size_t N)
+template<class COMPLEX, class A_TYPE>
+inline void getLogarithmicDerivativesForward(COMPLEX z, size_t N, A_TYPE& A)
     requires (IsComplex<COMPLEX>)
 {
-    sci::GridData<COMPLEX, 1>A(N);
     using FLT = decltype(z.real());
     const COMPLEX im(0, 1);
 
@@ -127,43 +126,35 @@ inline sci::GridData<COMPLEX, 1> getLogarithmicDerivativesForward(COMPLEX z, siz
     for (size_t i = 2; i < A.size(); ++i)
         A[i] = FLT(1) / (FLT(i) / z - A[i - 1]) - FLT(i) / z;
 
-    return A;
 }
 
-template<class FLT>
-inline sci::GridData<FLT, 1> getLogarithmicDerivativesForward(FLT z, size_t N)
+template<class FLT, class A_TYPE>
+inline void getLogarithmicDerivativesForward(FLT z, size_t N, A_TYPE& A)
     requires (!IsComplex<FLT>)
 {
-    sci::GridData<FLT, 1>A(N);
-
     FLT tanz = std::tan(z);
     A[1] = -FLT(1) / z + (z * tanz) / (tanz - z);
     for (size_t i = 2; i < A.size(); ++i)
         A[i] = FLT(1) / (FLT(i) / z - A[i - 1]) - FLT(i) / z;
-
-    return A;
 }
 
 //z is the size parameter (x) multplied by the refractive index. It can be real or complex
-template<class MAYBECOMPLEX>
-inline sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesBackward(MAYBECOMPLEX z, size_t N)
+template<class MAYBECOMPLEX, class A_TYPE>
+inline void getLogarithmicDerivativesBackward(MAYBECOMPLEX z, size_t N, A_TYPE& A)
 {
-    sci::GridData<MAYBECOMPLEX, 1>A(N);
     using FLT = decltype(std::real(z));
 
-    A.back() = getLogarithmicDerivative(z, N, 0.0000001);
+    A[N-1] = getLogarithmicDerivative(z, N, 0.0000001);
     for (size_t i = N - 2; i != size_t(-1); --i)
     {
         auto nOverZ = FLT(i + 1) / z;
         A[i] = nOverZ - FLT(1) / (A[i + 1] + nOverZ);
     }
-
-    return A;
 }
 
 
-template<class MAYBECOMPLEX, class FLT>
-inline sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAYBECOMPLEX refractiveIndex, FLT x, size_t N)
+template<class MAYBECOMPLEX, class FLT, class A_TYPE>
+inline void getLogarithmicDerivativesFastestStable(MAYBECOMPLEX refractiveIndex, FLT x, size_t N, A_TYPE &A)
 {
     //calculate A. In some situations this can be done with forward recursion which
     //is faster, If not, then we calculate the last A using the Lentz method and then
@@ -173,17 +164,18 @@ inline sci::GridData<MAYBECOMPLEX, 1> getLogarithmicDerivativesFastestStable(MAY
     //use the more stable method.
 
     if (std::real(refractiveIndex) == std::numeric_limits<double>::infinity())
-        return sci::GridData<MAYBECOMPLEX, 1>(N, MAYBECOMPLEX(1.0)); //avoid nans when refractiveIndex.real() is infinity. A cancels out anyway in this case
+        for (auto& a : A)
+            a = MAYBECOMPLEX(1.0); //avoid nans when refractiveIndex.real() is infinity. A cancels out anyway in this case
 
     auto z = refractiveIndex * x;
     if (std::real(refractiveIndex) < FLT(1.05) || std::real(refractiveIndex) > FLT(9.25) ||
         x < FLT(1) || x > FLT(10000) ||
         std::abs(std::imag(refractiveIndex)) * x > (FLT(13.78) * std::real(refractiveIndex) - FLT(10.8)) * std::real(refractiveIndex) + FLT(3.9))
         //Use the stable but slower backwards recursion
-        return getLogarithmicDerivativesBackward(z, N);
+        getLogarithmicDerivativesBackward(z, N, A);
     else
         //use the faster forwards recursion
-        return getLogarithmicDerivativesForward(z, N);
+        getLogarithmicDerivativesForward(z, N, A);
 }
 
 template<class FLT, class COMPLEX, class RI>
@@ -279,8 +271,8 @@ template<class FLT, class COMPLEX>
 class MiePreAllocator : public PreAllocator
 {
 public:
-    MiePreAllocator(size_t nAngles)
-        :PreAllocator((nAngles + sizeof(void*))* (6 * sizeof(FLT) + 2 * sizeof(COMPLEX)))
+    MiePreAllocator(size_t nAngles, FLT largestX)
+        :PreAllocator((nAngles + sizeof(void*))* (6 * sizeof(FLT) + 2 * sizeof(COMPLEX)) + (nTerms(largestX)+sizeof(void*))*sizeof(COMPLEX))
     {
     }
 };
@@ -291,7 +283,7 @@ inline void mie(FLT x, MAYBECOMPLEX refractiveIndex, const sci::GridData<FLT, 1>
     FLT& extinctionEfficiency, FLT& scatteringEfficiency,
     FLT& backscatterEfficiency, FLT& asymmetryParameter)
 {
-    MiePreAllocator<FLT, COMPLEX> preAllocator(mus.size());
+    MiePreAllocator<FLT, COMPLEX> preAllocator(mus.size(), x);
     mie(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter, preAllocator);
 }
 
@@ -319,12 +311,13 @@ inline void mie(FLT x, MAYBECOMPLEX refractiveIndex, const sci::GridData<FLT, 1>
     if (N < 2)
         throw("Failure in Mie code - the number of terms needed was less than 2. Did you pass in negative sizes or something?");
 
-
     //logarithmic derivative, called A in Wiscombe or D in Bohren anf Huffman
     //In some circumstances it is stable to calculate this forward, but some 
     //circumstances need us to calculate the last element, then work backwards.
     //So we pre-calculate this to satisfy both scenarios
-    sci::GridData<MAYBECOMPLEX, 1>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
+    auto  A = sci::views::make_grid_view_1d(preAllocator.getSpan<MAYBECOMPLEX>(N));
+    getLogarithmicDerivativesFastestStable(refractiveIndex, x, N, A);
+    //sci::GridData<MAYBECOMPLEX, 1>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
 
 
 
