@@ -17,13 +17,13 @@ bool testLogarithmicDerivatives()
     size_t N(14);
 	sci::GridData<std::complex<double>, 1> testForward(N);
 	sci::GridData<std::complex<double>, 1> testBackward(N);
-    getLogarithmicDerivativesForward(z, N, testForward);
-    getLogarithmicDerivativesBackward(z, N, testBackward);
+    sca::getLogarithmicDerivativesForward(z, N, testForward);
+	sca::getLogarithmicDerivativesBackward(z, N, testBackward);
 
 	sci::GridData<std::complex<double>, 1> testForward2(66);
 	sci::GridData<std::complex<double>, 1> testBackward2(66);
-    getLogarithmicDerivativesForward(50.0 * 4.0 / 3.0, 66, testForward2);
-    getLogarithmicDerivativesBackward(50.0 * 4.0 / 3.0, 66, testBackward2);
+	sca::getLogarithmicDerivativesForward(50.0 * 4.0 / 3.0, 66, testForward2);
+	sca::getLogarithmicDerivativesBackward(50.0 * 4.0 / 3.0, 66, testBackward2);
     return true;
 }
 
@@ -44,7 +44,7 @@ void testPrahl()
     sci::GridData<std::complex<double>, 1> s1;
     sci::GridData<std::complex<double>, 1> s2;
 
-    mie(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter);
+	sca::mie(x, refractiveIndex, mus, s1, s2, extinctionEfficiency, scatteringEfficiency, backscatterEfficiency, asymmetryParameter);
 
 
     //compare to Scott Prahl code's values
@@ -97,17 +97,17 @@ void testPrahl()
 
 std::complex<double> Lentz_Dn(std::complex<double> z, long n)
 {
-	return getLogarithmicDerivative(z, n, 0.0000001);
+	return sca::getLogarithmicDerivative(z, n, 0.0000001);
 }
 
 void Dn_up(std::complex<double> z, long n, sci::GridData< std::complex<double>, 1>& D)
 {
-	getLogarithmicDerivativesForward(z, n, D);
+	sca::getLogarithmicDerivativesForward(z, n, D);
 }
 
 void Dn_down(std::complex<double> z, long n, sci::GridData< std::complex<double>, 1>& D)
 {
-	getLogarithmicDerivativesBackward(z, n, D);
+	sca::getLogarithmicDerivativesBackward(z, n, D);
 }
 
 double
@@ -538,7 +538,7 @@ void TestsFromPrahl()
 		for (i = 0; i < nangles; ++i)
 			mu[i] = cos(mu[i]);
 
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 
 		printf("          x        Qsca       Qext      Qback    g\n");
 		printf("BH    %7.3f %10.6f %10.6f %10.6f \n", 5.213, 3.105430, 3.10543, 2.92534);
@@ -563,35 +563,35 @@ void TestsFromPrahl()
 		printf("          n                 Qa           Dave         Prahl\n");
 
 		m = std::complex<double>(1.342, 0.0);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.0, 0.0);
 
 		m = std::complex<double>(1.342, -0.0001);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.0535, 0.05355);
 
 		m = std::complex<double>(1.342, -0.01);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9649, 0.96495);
 
 		m = std::complex<double>(1.342, -0.2);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9542, 0.95419);
 
 		m = std::complex<double>(1.342, -0.4);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.9221, 0.92111);
 
 		m = std::complex<double>(1.342, -0.6);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.8808, 0.88081);
 
 		m = std::complex<double>(1.342, -0.8);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.8369, 0.83686);
 
 		m = std::complex<double>(1.342, -1.0);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%10.5g%-+7.4fi    %10.5f    %10.5f    %10.5f\n", m.real(), m.imag(), qext - qsca, 0.7910, 0.79097);
 
 		printf("\n");
@@ -615,21 +615,21 @@ void TestsFromPrahl()
 
 		m = std::complex<double>(std::numeric_limits<double>::infinity(), 0.0);
 		x = 0.3;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 0.028, 0.028, qsca * g, -0.010, -0.011);
 		//ez_Mie(x, 0.0, qsca, g);
 		//printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f [ez mie]\n", x, qsca, 0.028, 0.028, qsca * g, -0.10, -0.011);
 
 		x = 1.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 2.036, 2.036, qsca * g, -0.384, -0.385);
 
 		x = 1.5;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 2.154, 2.155, qsca * g, 0.156, 0.156);
 
 		x = 5.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.1f   %7.3f %7.3f %7.3f   %7.3f %7.3f %7.3f\n", x, qsca, 2.116, 2.116, qsca * g, 0.965, 0.965);
 
 		printf("\n");
@@ -651,17 +651,17 @@ void TestsFromPrahl()
 
 		m = std::complex<double>(3.41, -1.94);
 		x = 1.3;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.1f   %7.3f %7.3f %7.3f   %7.2f %7.2f %7.2f\n", x, qsca, 1.670, 1.669, qsca * g, 0.38, 0.30);
 
 		m = std::complex<double>(7.20, -2.65);
 		x = 1.3;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.1f   %7.3f %7.3f %7.3f   %7.2f %7.2f %7.2f\n", x, qsca, 1.861, 1.860, qsca * g, 0.20, 0.31);
 
 		m = std::complex<double>(std::numeric_limits<double>::infinity(), 0.0);
 		x = 1.3;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.1f   %7.3f %7.3f %7.3f   %7.2f %7.2f %7.2f\n", x, qsca, 2.265, 2.266, qsca * g, -0.11, -0.05);
 
 		printf("\n");
@@ -685,24 +685,24 @@ void TestsFromPrahl()
 		printf("   x            Qs          Qs          g          g\n");
 		m = std::complex<double>(0.75, 0.0);
 		x = 0.099;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000007, g, 0.001448);
 		//ez_Mie(x, 0.75, qsca, g);
 		//printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez mie]\n", x, qsca, 0.000007, g, 0.001448);
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 0.101;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000008, g, 0.001507);
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 10.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.232265, g, 0.896473);
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 1000.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.997908, g, 0.844944);
 		//ez_Mie(x, 0.75, qsca, g);
 		//printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez mie]\n", x, qsca, 1.997908, g, 0.844944);
@@ -714,15 +714,15 @@ void TestsFromPrahl()
 		printf("   x            Qs          Qs          g          g\n");
 		m = std::complex<double>(1.33, -0.00001);
 		x = 1.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.093923, g, 0.184517);
 
 		x = 100.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.096594, g, 0.868959);
 
 		x = 10000.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.723857, g, 0.907840);
 
 
@@ -733,23 +733,23 @@ void TestsFromPrahl()
 		m = std::complex<double>(1.5, -1.00);
 
 		x = 0.055;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000011, g, 0.000491);
 
 		x = 0.056;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000012, g, 0.000509);
 
 		x = 1.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.6634538, g, 0.192136);
 
 		x = 100.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.283697, g, 0.850252);
 
 		x = 10000.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.236574, g, 0.846310);
 
 
@@ -760,15 +760,15 @@ void TestsFromPrahl()
 		m = std::complex<double>(10.0, -10.00);
 
 		x = 1.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.049405, g, -0.110664);
 
 		x = 100.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.836785, g, 0.556215);
 
 		x = 10000.0;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 1.795393, g, 0.548194);
 
 
@@ -778,21 +778,21 @@ void TestsFromPrahl()
 		printf("   x            Qs          Qs          g          g\n");
 		m = std::complex<double>(std::numeric_limits<double>::infinity(), 0.0);
 		x = 0.099;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000321, g, -0.397357);
 
 		x = 0.101;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 0.000348, g, -0.397262);
 
 		x = 100;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.008102, g, 0.500926);
 		//ez_Mie(x, 0.0, qsca, g);
 		//printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f [ez mie]\n", x, qsca, 2.008102, g, 0.500926);
 
 		x = 10000;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%9.3f   %11.7f %11.7f   %11.7f %11.7f\n", x, qsca, 2.000289, g, 0.500070);
 
 
@@ -826,7 +826,7 @@ void TestsFromPrahl()
 		printf("   angle       S1                    S2         \n");
 		x = 1.0;
 		m = std::complex<double>(1.5, -1.0);
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 
 		printf(form, mu[0], s1[0].real(), s1[0].imag(), s2[0].real(), s2[0].imag());
 		printf(form2, mu[0], 5.84080E-01, 1.90515E-01, 5.84080E-01, 1.90515E-01);
@@ -864,35 +864,35 @@ void TestsFromPrahl()
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 0.099;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000007, g, 0.001448);
 		x = 0.101;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000008, g, 0.001507);
 
 		m = std::complex<double>(1.5, -1.0);
 		x = 0.055;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("the following line does not agree with the Prahl\nor Wiscombe values for g.\nThe difference is because for this example I use\nthe more stable down recursion (due to stricter\ntests) and Prahl uses less stable up recursion.\nForcing Prahl to use down recursion gives\nmatching answers. Hence I am potentially correct.\n");
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.101491, g, 0.000491);
 		x = 0.056;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.103347, g, 0.000509);
 
 		m = std::complex<double>(1e-10, -1e10);
 		x = 0.099;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000321, g, -0.397357);
 		x = 0.101;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000348, g, -0.397262);
 
 		m = std::complex<double>(0.0, -1e10);
 		x = 0.099;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000321, g, -0.397357);
 		x = 0.101;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%4.3f   % 8.6f % 8.6f   % 8.6f % 8.6f\n", x, qext, 0.000348, g, -0.397262);
 
 		printf("\n");
@@ -916,67 +916,67 @@ void TestsFromPrahl()
 		m = std::complex<double>(1.55, 0.0);
 		x = 2 * 3.1415926535 * 0.525 / 0.6328;
 		ref = 2.92534;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8g\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 		m = std::complex<double>(0.0, -1000.0);
 		x = 0.099;
 		ref = (4.77373E-07 * 4.77373E-07 + 1.45416E-03 * 1.45416E-03) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.2f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 0.101;
 		ref = (5.37209E-07 * 5.37209E-07 + 1.54399E-03 * 1.54399E-03) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.2f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 100;
 		ref = (4.35251E+01 * 4.35251E+01 + 2.45587E+01 * 2.45587E+01) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.2f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 		m = std::complex<double>(0.75, 0.0);
 		x = 0.099;
 		ref = (1.81756E-08 * 1.81756E-08 + 1.64810E-04 * 1.64810E-04) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 0.101;
 		ref = (2.04875E-08 * 2.04875E-08 + 1.74965E-04 * 1.74965E-04) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 10.0;
 		ref = (1.07857E+00 * 1.07857E+00 + 3.60881E-02 * 3.60881E-02) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 1000.0;
 		ref = (1.70578E+01 * 1.70578E+01 + 4.84251E+02 * 4.84251E+02) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 		m = std::complex<double>(1.33, -0.00001);
 		x = 1.0;
 		ref = (2.24362E-02 * 2.24362E-02 + 1.43711E-01 * 1.43711E-01) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 100.0;
 		ref = (5.65921E+01 * 5.65921E+01 + 4.65097E+01 * 4.65097E+01) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 		m = std::complex<double>(1.5, -1.0);
 		x = 0.055;
 		ref = (7.66140E-05 * 7.66140E-05 + 8.33814E-05 * 8.33814E-05) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 0.056;
 		ref = (8.08721E-05 * 8.08721E-05 + 8.80098E-05 * 8.80098E-05) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 1.0;
 		ref = (3.48844E-01 * 3.48844E-01 + 1.46829E-01 * 1.46829E-01) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 		x = 100.0;
 		ref = (2.02936E+01 * 2.02936E+01 + 4.38444E+00 * 4.38444E+00) / x / x * 4;
-		mie(x, m, mu, s1, s2, qext, qsca, qback, g);
+		sca::mie(x, m, mu, s1, s2, qext, qsca, qback, g);
 		printf("%8.3f   % 8.4f % 8.4f   % 8e % 8e %8.5f\n", x, m.real(), m.imag(), qback, ref, qback / ref);
 
 
@@ -995,7 +995,7 @@ void speedTest()
 	sci::GridData<double, 1> mus (100);
 	for (size_t i = 0; i < mus.size(); ++i)
 		mus[i] = double(i) / double(mus.size() - 1) * 2.0;
-	MiePreAllocator<double, std::complex<double>> preAllocator(mus.size(), 1000);
+	sca::MiePreAllocator<double, std::complex<double>> preAllocator(mus.size(), 1000);
 	std::complex<double>    refractiveIndex(1.5, 0.00001);
 	double x;
 	double extinctionEfficiency;
@@ -1062,14 +1062,14 @@ void speedTest()
 
 int main()
 {
-    constexpr double testBessel = getBesselMinusHalfOverPlusHalfRatio<double>(1.0, 9, 0.0); //test, check it matches with the Lentz paper
+    constexpr double testBessel = sca::getBesselMinusHalfOverPlusHalfRatio<double>(1.0, 9, 0.0); //test, check it matches with the Lentz paper
     if (std::abs(testBessel - double(18.95228198)) > 0.00000001)
     {
         std::cout << "Bessel test failed. Result was " << testBessel << " when it should have been 18.95228198" << std::endl;
         return 1;
     }
 
-    getBesselMinusHalfOverPlusHalfRatio<std::complex<double>>(std::complex(1.0, 0.01), 9, 0.0); //just checking it compiles really
+	sca::getBesselMinusHalfOverPlusHalfRatio<std::complex<double>>(std::complex(1.0, 0.01), 9, 0.0); //just checking it compiles really
 
 	TestsFromPrahl();
 
