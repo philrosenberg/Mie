@@ -282,6 +282,23 @@ public:
     }
 };
 
+class PreAllocatorClearer
+{
+public:
+    PreAllocatorClearer(PreAllocator *preAllocator)
+        :m_preAllocator(preAllocator)
+    {
+        if(!m_preAllocator->isClear())
+            throw(std::bad_alloc());
+    }
+    ~PreAllocatorClearer()
+    {
+        m_preAllocator->clear();
+    }
+private:
+    PreAllocator* m_preAllocator;
+};
+
 template<class FLT, class COMPLEX, class MAYBECOMPLEX>
 inline void mie(FLT x, MAYBECOMPLEX refractiveIndex, const sci::GridData<FLT, 1>& mus,
     sci::GridData<COMPLEX, 1>& s1, sci::GridData<COMPLEX, 1>& s2,
@@ -300,10 +317,9 @@ inline void mie(FLT x, MAYBECOMPLEX refractiveIndex, const sci::GridData<FLT, 1>
     FLT& backscatterEfficiency, FLT& asymmetryParameter,
     PreAllocator &preAllocator)
 {
-    if (!preAllocator.isClear())
-    {
-        throw(std::bad_alloc());
-    }
+    //creating this object checks the preallocated memory is empty and
+    // when it goes out of scope, it clears the memory ready for reuse
+    PreAllocatorClearer memoryClearer(&preAllocator);
 
     if (std::norm(refractiveIndex) * x * x < 0.01)
     {
@@ -319,7 +335,7 @@ inline void mie(FLT x, MAYBECOMPLEX refractiveIndex, const sci::GridData<FLT, 1>
     //logarithmic derivative, called A in Wiscombe or D in Bohren anf Huffman
     //In some circumstances it is stable to calculate this forward, but some 
     //circumstances need us to calculate the last element, then work backwards.
-    //So we pre-calculate this to satisfy both scenarios
+    //So we pre-calculate A to satisfy both scenarios
     auto  A = sci::views::make_grid_view_1d(preAllocator.getSpan<MAYBECOMPLEX>(N));
     getLogarithmicDerivativesFastestStable(refractiveIndex, x, N, A);
     //sci::GridData<MAYBECOMPLEX, 1>A(getLogarithmicDerivativesFastestStable(refractiveIndex, x, N));
@@ -347,9 +363,9 @@ inline void mie(FLT x, MAYBECOMPLEX refractiveIndex, const sci::GridData<FLT, 1>
     FLT sign(-1.0);
 
     
-    //These variables are needed for the angular resolved scallering
+    //These variables are needed for the angular resolved scattering
     //
-    // eigenPi = 1 for all angles and eigenPiPrev = 0 for all angles
+    // initially, eigenPi = 1 for all angles and eigenPiPrev = 0 for all angles
     // hence
     //t = s = mus
     // hence 
